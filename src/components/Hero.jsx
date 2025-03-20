@@ -1,9 +1,5 @@
 import React from "react"
 import { Link } from "react-router-dom"
-import { createAppKit } from '@reown/appkit/react'
-import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { arbitrum, mainnet } from '@reown/appkit/networks'
-
 
 const Button = ({ children, className, ...props }) => (
   <button

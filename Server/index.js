@@ -17,19 +17,6 @@ app.use("/api",register);
 
 
 
-
-app.get("/",(req,res)=>{
-    // console.log(data)
-    res.send("testing")
-
-})
-
-
-
-
-
-
-
 connectDB(process.env.MONGO_URL).then(()=>{   
     try{
       
