@@ -71,6 +71,31 @@ contract NFTMarketplace  {
 
     event NFTListed(address seller, address nftContract, uint256 tokenId, uint256 price);
     event NFTBought(address buyer, address seller, address nftContract, uint256 tokenId, uint256 price);
+    event CollectionCreated(address indexed collectionAddress, string name, string symbol, address creator);
+
+    function createCollection(
+        string memory name,
+        string memory symbol,
+        string memory baseURI_,
+        uint256 _maxSupply,
+        uint256 _mintPrice,
+        uint256 _maxMintPerWallet
+    ) external {
+        // Deploy a new NFTCollection contract dynamically
+        NFTCollection newCollection = new NFTCollection(
+            name,
+            symbol,
+            baseURI_,
+            _maxSupply,
+            _mintPrice,
+            _maxMintPerWallet,
+            msg.sender, // Creator
+            address(this) // Marketplace as minter
+        );
+
+        collections.push(address(newCollection)); // Store collection address
+        emit CollectionCreated(address(newCollection), name, symbol, msg.sender);
+    }
 
     function mintNFT(address nftContract, uint256 quantity) external payable {
         NFTCollection collection = NFTCollection(nftContract);
@@ -123,8 +148,38 @@ contract NFTMarketplace  {
             collection.maxMintPerWallet()
         );
     }
+// Define a struct to hold collection details
+struct CollectionData {
+    address contractAddress;
+    string name;
+    uint256 maxSupply;
+    uint256 mintPrice;
+    string baseURI;
+    uint256 totalMinted;
+    uint256[] tokenIds;
+}
 
-    function getCollections() external view returns (address[] memory) {
-        return collections;
+function getCollections() external view returns (CollectionData[] memory) {
+    uint256 collectionCount = collections.length;
+    CollectionData[] memory allCollections = new CollectionData[](collectionCount);
+
+    for (uint256 i = 0; i < collectionCount; i++) {
+        NFTCollection collection = NFTCollection(collections[i]);
+
+        // Populate struct for each collection
+        allCollections[i] = CollectionData({
+            contractAddress: collections[i],
+            name: collection.name(),
+            maxSupply: collection.maxSupply(),
+            mintPrice: collection.mintPrice(),
+            baseURI: collection.baseURI(),
+            totalMinted: collection.totalMinted(),
+            tokenIds: contractNFTs[collections[i]]
+        });
     }
+
+    return allCollections;
+}
+
+
 }

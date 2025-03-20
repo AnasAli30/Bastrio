@@ -1,38 +1,93 @@
-import React from "react"
-
-const featuredNFTs = [
-  { id: 1, name: "Cosmic Harmony", artist: "Stella Nova", price: "0.5 ETH" },
-  { id: 2, name: "Digital Dreams", artist: "Pixel Master", price: "0.8 ETH" },
-  { id: 3, name: "Neon Nights", artist: "Glow Wizard", price: "0.6 ETH" },
-  { id: 4, name: "Abstract Realms", artist: "Mindscape", price: "1.2 ETH" },
-]
+import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import NFT_MARKETPLACE_ABI from "../constant/abi.json";
+import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 
 export default function FeaturedNFTs() {
+  const [collections, setCollections] = useState([]);
+  const { isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider("eip155");
+
+  const NFT_MARKETPLACE_ADDRESS = "0x71ee736bA6d6520a80BFd44a439e817fDE21c98D";
+
+  useEffect(() => {
+    async function fetchCollections() {
+      if (!isConnected || !walletProvider) return;
+
+      try {
+        const provider = new ethers.BrowserProvider(walletProvider);
+        const contract = new ethers.Contract(
+          NFT_MARKETPLACE_ADDRESS,
+          NFT_MARKETPLACE_ABI,
+          provider
+        );
+
+        const collectionsData = await contract.getCollections();
+
+        const formattedCollections = collectionsData.map((collection) => ({
+          contractAddress: collection[0],
+          name: collection[1],
+          maxSupply: String(collection[2]),
+          mintPrice: String(collection[3]),
+          baseURI: collection[4].replace("ipfs://", "https://ipfs.io/ipfs/"),
+          totalMinted: String(collection[5]),
+          tokenIds: collection[6].map((id) => String(id)), 
+        }));
+
+        console.log("Formatted Collections:", formattedCollections);
+        setCollections(formattedCollections);
+      } catch (error) {
+        console.error("Error fetching collections:", error);
+      }
+    }
+
+    fetchCollections();
+  }, [isConnected, walletProvider]);
+
   return (
     <section className="py-12 sm:py-20 bg-white">
       <div className="container mx-auto px-4 sm:px-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Featured NFTs</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {featuredNFTs.map((nft) => (
-            <div
-              key={nft.id}
-              className="bg-gray-100 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300"
-            >
-              <img
-                src={`https://via.placeholder.com/300x300.png?text=${nft.name}`}
-                alt={nft.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-2">{nft.name}</h3>
-                <p className="text-gray-600 mb-2">by {nft.artist}</p>
-                <p className="text-purple-600 font-bold">{nft.price}</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">
+          Featured NFT Collections
+        </h2>
+        {collections.length === 0 ? (
+          <p className="text-center text-gray-500">No Collections available.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {collections.map((collection, index) => (
+              <div
+                key={index}
+                className="bg-gray-100 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300"
+              >
+                <img
+                  src={collection.baseURI}
+                  alt={collection.name}
+                  className="w-full h-48 object-cover"
+                  onError={(e) =>
+                    (e.target.src =
+                      "https://st4.depositphotos.com/14953852/22772/v/450/depositphotos_227725020-stock-illustration-image-available-icon-flat-vector.jpg")
+                  }
+                />
+                <div className="p-4">
+                  <h3 className="font-bold text-lg mb-2">{collection.name}</h3>
+                  <p className="text-gray-600">
+                    Contract: {collection.contractAddress.slice(0, 6)}...
+                    {collection.contractAddress.slice(-4)}
+                  </p>
+                  <p className="text-gray-600">Max Supply: {collection.maxSupply}</p>
+                  <p className="text-gray-600">Total Minted: {collection.totalMinted}</p>
+                  <p className="text-gray-600">
+                    Mint Price: {ethers.formatEther(collection.mintPrice)} ETH
+                  </p>
+                  <p className="text-gray-600">
+                    Tokens: {collection.tokenIds.length > 0 ? collection.tokenIds.join(", ") : "None"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
-  )
+  );
 }
-

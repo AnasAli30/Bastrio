@@ -7,13 +7,13 @@ import Create from "./components/Create"
 import Footer from "./components/Footer"
 import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { arbitrum, mainnet } from '@reown/appkit/networks'
+import { arbitrum, mainnet,base } from '@reown/appkit/networks'
 
 // 1. Get projectId
 const projectId = '4eca2355824e0f47a6f1dd236a407e0f'
 
 // 2. Set the networks
-const networks = [arbitrum, mainnet]
+const networks = [arbitrum, mainnet,base]
 
 // 3. Create a metadata object - optional
 const metadata = {

@@ -3,6 +3,7 @@ import Hero from "./Hero"
 import FeaturedNFTs from "./FeaturedNFTs"
 import MintNFT from "./MintNFT"
 
+
 export default function Home() {
   return (
     <div>
