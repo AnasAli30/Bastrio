@@ -1,5 +1,9 @@
 import React from "react"
 import { Link } from "react-router-dom"
+import { createAppKit } from '@reown/appkit/react'
+import { EthersAdapter } from '@reown/appkit-adapter-ethers'
+import { arbitrum, mainnet } from '@reown/appkit/networks'
+
 
 const Button = ({ children, className, ...props }) => (
   <button
@@ -21,7 +25,7 @@ export default function Hero() {
           Explore the world of digital art and own a piece of the future with Abstrio on Abstract Chain
         </p>
         <Link to="/mint">
-          <Button className="bg-secondary text-background hover:bg-opacity-80">Start Minting on Abstract Chain</Button>
+          <Button className="bg-secondary text-background hover:bg-opacity-80">Start Minting</Button>
         </Link>
       </div>
     </section>
