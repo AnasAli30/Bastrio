@@ -19,11 +19,11 @@ export default function Footer() {
     <footer className="bg-background text-secondary py-8">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold mb-2 text-primary">Abstrio</h3>
             <p className="text-secondary">Discover, collect, and mint unique digital assets on Abstrio</p>
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <h4 className="text-lg font-bold mb-2 text-primary">Quick Links</h4>
             <ul className="space-y-2">
               <li>
@@ -42,7 +42,7 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
           <div>
             <h4 className="text-lg font-bold mb-2 text-primary">Community</h4>
             <ul className="space-y-2">
@@ -63,7 +63,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div>
+          {/* <div>
             <h4 className="text-lg font-bold mb-2 text-primary">Subscribe</h4>
             <p className="text-secondary mb-2">Stay updated with our latest drops and features</p>
             <form className="flex flex-col sm:flex-row gap-2">
@@ -72,7 +72,7 @@ export default function Footer() {
                 Subscribe
               </Button>
             </form>
-          </div>
+          </div> */}
         </div>
         <div className="border-t border-primary mt-8 pt-8 text-center text-secondary">
           <p>&copy; 2025 Abstrio. All rights reserved.</p>

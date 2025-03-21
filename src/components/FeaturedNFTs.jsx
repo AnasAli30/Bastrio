@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useNavigate } from "react-router-dom";
 import NFT_MARKETPLACE_ABI from "../constant/abi.json";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 
@@ -7,8 +8,9 @@ export default function FeaturedNFTs() {
   const [collections, setCollections] = useState([]);
   const { isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider("eip155");
+  const navigate = useNavigate();
 
-  const NFT_MARKETPLACE_ADDRESS = "0x71ee736bA6d6520a80BFd44a439e817fDE21c98D";
+  const NFT_MARKETPLACE_ADDRESS = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
 
   useEffect(() => {
     async function fetchCollections() {
@@ -23,7 +25,7 @@ export default function FeaturedNFTs() {
         );
 
         const collectionsData = await contract.getCollections();
-
+console.log(collectionsData)
         const formattedCollections = collectionsData.map((collection) => ({
           contractAddress: collection[0],
           name: collection[1],
@@ -34,7 +36,6 @@ export default function FeaturedNFTs() {
           tokenIds: collection[6].map((id) => String(id)), 
         }));
 
-        console.log("Formatted Collections:", formattedCollections);
         setCollections(formattedCollections);
       } catch (error) {
         console.error("Error fetching collections:", error);
@@ -57,7 +58,10 @@ export default function FeaturedNFTs() {
             {collections.map((collection, index) => (
               <div
                 key={index}
-                className="bg-gray-100 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300"
+                className="bg-gray-100 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300 cursor-pointer"
+                onClick={() =>
+                  navigate(`/collection/${collection.contractAddress}`, { state: { collection } })
+                } // Navigate with state
               >
                 <img
                   src={collection.baseURI}

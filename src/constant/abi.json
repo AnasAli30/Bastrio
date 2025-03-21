@@ -296,7 +296,7 @@
 				"type": "address"
 			}
 		],
-		"name": "getNFTsByContract",
+		"name": "getCollectionsByContract",
 		"outputs": [
 			{
 				"internalType": "uint256[]",
@@ -321,6 +321,11 @@
 			{
 				"internalType": "uint256",
 				"name": "maxMintPerWallet",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "mintPrice",
 				"type": "uint256"
 			}
 		],

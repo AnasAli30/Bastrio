@@ -97,40 +97,56 @@ contract NFTMarketplace  {
         emit CollectionCreated(address(newCollection), name, symbol, msg.sender);
     }
 
-    function mintNFT(address nftContract, uint256 quantity) external payable {
-        NFTCollection collection = NFTCollection(nftContract);
-        require(msg.value >= collection.mintPrice() * quantity, "Insufficient payment");
-        require(collection.mintedPerWallet(msg.sender) + quantity <= collection.maxMintPerWallet(), "Exceeds per-wallet limit");
+ function mintNFT(address nftContract, uint256 quantity) external payable {
+    NFTCollection collection = NFTCollection(nftContract);
+    uint256 totalCost = collection.mintPrice() * quantity;
 
-        collection.mint{value: msg.value}(msg.sender, quantity);
-        for (uint256 i = 0; i < quantity; i++) {
-            contractNFTs[nftContract].push(collection.totalMinted());
-        }
+    require(msg.value >= totalCost, "Insufficient payment");
+    require(collection.mintedPerWallet(msg.sender) + quantity <= collection.maxMintPerWallet(), "Exceeds per-wallet limit");
+
+    collection.mint(msg.sender, quantity);
+
+    // Refund excess payment (if any)
+    if (msg.value > totalCost) {
+        payable(msg.sender).transfer(msg.value - totalCost);
     }
 
-    function listNFT(address nftContract, uint256 tokenId, uint256 price) external {
-        IERC721(nftContract).transferFrom(msg.sender, address(this), tokenId);
-        listings[nftContract][tokenId] = Listing(msg.sender, nftContract, tokenId, price);
-        emit NFTListed(msg.sender, nftContract, tokenId, price);
+    for (uint256 i = 0; i < quantity; i++) {
+        contractNFTs[nftContract].push(collection.totalMinted());
     }
+}
 
-    function buyNFT(address nftContract, uint256 tokenId) external payable {
-        Listing memory listing = listings[nftContract][tokenId];
-        require(msg.value >= listing.price, "Insufficient funds");
+function listNFT(address nftContract, uint256 tokenId, uint256 price) external {
+    IERC721 nft = IERC721(nftContract);
+    require(nft.getApproved(tokenId) == address(this) || nft.isApprovedForAll(msg.sender, address(this)), "Marketplace not approved");
 
-        payable(listing.seller).transfer(msg.value);
-        IERC721(nftContract).safeTransferFrom(address(this), msg.sender, tokenId);
-        delete listings[nftContract][tokenId];
+    nft.transferFrom(msg.sender, address(this), tokenId);
+    listings[nftContract][tokenId] = Listing(msg.sender, nftContract, tokenId, price);
+    emit NFTListed(msg.sender, nftContract, tokenId, price);
+}
 
-        emit NFTBought(msg.sender, listing.seller, nftContract, tokenId, msg.value);
-    }
 
-    function getNFTsByContract(address nftContract) external view returns (
+  function buyNFT(address nftContract, uint256 tokenId) external payable {
+    Listing memory listing = listings[nftContract][tokenId];
+    require(msg.value >= listing.price, "Insufficient funds");
+
+    // Remove the listing before transferring funds (prevents reentrancy)
+    delete listings[nftContract][tokenId];
+
+    payable(listing.seller).transfer(msg.value);
+    IERC721(nftContract).safeTransferFrom(address(this), msg.sender, tokenId);
+
+    emit NFTBought(msg.sender, listing.seller, nftContract, tokenId, msg.value);
+}
+
+
+    function getCollectionsByContract(address nftContract) external view returns (
         uint256[] memory tokenIds, 
         bool[] memory listedStatus, 
         string memory baseURI, 
         uint256 totalSupply, 
-        uint256 maxMintPerWallet
+        uint256 maxMintPerWallet,
+        uint256 mintPrice
     ) {
         NFTCollection collection = NFTCollection(nftContract);
         tokenIds = contractNFTs[nftContract];
@@ -145,7 +161,8 @@ contract NFTMarketplace  {
             listedStatus,
             collection.baseURI(),
             collection.maxSupply(),
-            collection.maxMintPerWallet()
+            collection.maxMintPerWallet(),
+            collection.mintPrice()
         );
     }
 // Define a struct to hold collection details
@@ -174,6 +191,7 @@ function getCollections() external view returns (CollectionData[] memory) {
             mintPrice: collection.mintPrice(),
             baseURI: collection.baseURI(),
             totalMinted: collection.totalMinted(),
+            maxMintPerWallet:collection.maxMintPerWallet(),
             tokenIds: contractNFTs[collections[i]]
         });
     }

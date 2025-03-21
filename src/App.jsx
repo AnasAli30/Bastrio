@@ -8,6 +8,7 @@ import Footer from "./components/Footer"
 import { createAppKit } from '@reown/appkit/react'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { arbitrum, mainnet,base } from '@reown/appkit/networks'
+import CollectionDetail from "./components/CollectionDetail";
 
 // 1. Get projectId
 const projectId = '4eca2355824e0f47a6f1dd236a407e0f'
@@ -44,6 +45,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/create" element={<Create />} />
+            <Route path="/collection/:contractAddress" element={<CollectionDetail />} />
           </Routes>
         </main>
         <Footer />
