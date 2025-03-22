@@ -43,26 +43,7 @@ export default function Footer() {
               </li>
             </ul>
           </div> */}
-          <div>
-            <h4 className="text-lg font-bold mb-2 text-primary">Community</h4>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-secondary hover:text-primary">
-                  Discord
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary hover:text-primary">
-                  Twitter
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary hover:text-primary">
-                  Instagram
-                </a>
-              </li>
-            </ul>
-          </div>
+       
           {/* <div>
             <h4 className="text-lg font-bold mb-2 text-primary">Subscribe</h4>
             <p className="text-secondary mb-2">Stay updated with our latest drops and features</p>

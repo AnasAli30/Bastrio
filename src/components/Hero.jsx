@@ -20,9 +20,9 @@ export default function Hero() {
         <p className="text-lg sm:text-xl mb-8">
           Explore the world of digital art and own a piece of the future with Abstrio on Abstract Chain
         </p>
-        <Link to="/mint">
+        {/* <Link to="/mint">
           <Button className="bg-secondary text-background hover:bg-opacity-80">Start Minting</Button>
-        </Link>
+        </Link> */}
       </div>
     </section>
   )

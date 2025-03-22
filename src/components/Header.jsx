@@ -29,7 +29,7 @@ export default function Header() {
           </Link>
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/explore" className="text-secondary hover:text-primary">
-              Explore
+              Drops
             </Link>
             <Link to="/create" className="text-secondary hover:text-primary">
               Create
