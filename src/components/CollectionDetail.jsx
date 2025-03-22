@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Form, useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { ethers } from "ethers";
-import { useParams } from "react-router-dom";
 import NFT_COLLECTION_ABI from "../constant/abi.json";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 
@@ -9,7 +8,7 @@ export default function CollectionDetail() {
   const location = useLocation();
   const initialCollection = location.state?.collection;
   const { contractAddress } = useParams();
-  const marketplaceContract = "0xF762a878921f173192b8E4F89A42E5797a523bdE"; 
+  const marketplaceContract = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
 
   const { isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider("eip155");
@@ -18,24 +17,28 @@ export default function CollectionDetail() {
   const [isMinting, setIsMinting] = useState(false);
   const [loading, setLoading] = useState(!initialCollection);
   const [mintAmount, setMintAmount] = useState(1);
+  const [nftData, setNftData] = useState([]); // Store metadata + images
 
   useEffect(() => {
-    // console.log(ini)
     if (!initialCollection) {
       fetchCollectionDetails();
+      
+    } else {
+      loadNFTMetadata(initialCollection);
     }
   }, [walletProvider]);
 
+  // 🔹 Fetch Collection Details from Contract
   const fetchCollectionDetails = async () => {
     try {
       setLoading(true);
       const provider = new ethers.BrowserProvider(walletProvider);
       const contract = new ethers.Contract(marketplaceContract, NFT_COLLECTION_ABI, provider);
-      
+
       const data = await contract.getCollectionsByContract(contractAddress);
       const formattedCollection = {
         contractAddress: contractAddress,
-        baseURI: data[2].replace("ipfs://", "https://ipfs.io/ipfs/"),
+        baseURI: data[2].replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/"),
         maxSupply: data[3].toString(),
         maxMintPerWallet: data[4].toString(),
         mintPrice: data[5].toString(),
@@ -43,9 +46,8 @@ export default function CollectionDetail() {
         listedStatus: data[1],
       };
 
-      console.log(formattedCollection)
-
       setCollection(formattedCollection);
+      loadNFTMetadata(formattedCollection);
     } catch (error) {
       console.error("Error fetching collection details:", error);
     } finally {
@@ -53,6 +55,36 @@ export default function CollectionDetail() {
     }
   };
 
+  // 🔹 Fetch NFT Metadata JSON for Minted NFTs
+  const loadNFTMetadata = async (collectionData) => {
+    if (!collectionData?.tokenIds?.length || !collectionData?.baseURI) return;
+
+    try {
+      const metadataList = await Promise.all(
+        collectionData.tokenIds.map(async (id) => {
+          const metadataUrl = `${collectionData.baseURI}${id}.json`;
+          try {
+            const response = await fetch(metadataUrl);
+            const metadata = await response.json();
+            return {
+              id,
+              name: metadata.name || `NFT #${id}`,
+              image: metadata.image.replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/"),
+            };
+          } catch (err) {
+            console.error(`Error loading metadata for NFT ${id}:`, err);
+            return null;
+          }
+        })
+      );
+
+      setNftData(metadataList.filter((nft) => nft !== null));
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+    }
+  };
+
+  // 🔹 Mint NFTs
   const handleMintNFT = async () => {
     if (!isConnected || !walletProvider) {
       alert("Connect your wallet first!");
@@ -68,12 +100,13 @@ export default function CollectionDetail() {
       const provider = new ethers.BrowserProvider(walletProvider);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(marketplaceContract, NFT_COLLECTION_ABI, signer);
-      
+
       const mintPrice = ethers.parseEther((Number(collection.mintPrice) * mintAmount).toString());
       const tx = await contract.mintNFT(contractAddress, mintAmount, { value: mintPrice });
       await tx.wait();
 
       alert("NFTs minted successfully!");
+      fetchCollectionDetails(); // Refresh collection after minting
     } catch (error) {
       console.error("Minting error:", error);
       alert("Minting failed!");
@@ -83,24 +116,31 @@ export default function CollectionDetail() {
   };
 
   if (loading) return <div className="text-center mt-10">Loading collection details...</div>;
-
+console.log(collection)
   return (
     <div className="w-full max-w-md mx-auto bg-white shadow-md rounded-lg overflow-hidden mt-10 p-6">
       <h2 className="text-xl font-bold mb-4">{collection?.name || "NFT Collection"}</h2>
-      <img
-        src={collection?.baseURI}
-        alt={collection?.name}
-        className="w-full h-48 object-cover mb-4"
-        onError={(e) =>
-          (e.target.src =
-            "https://st4.depositphotos.com/14953852/22772/v/450/depositphotos_227725020-stock-illustration-image-available-icon-flat-vector.jpg")
-        }
-      />
+      
+      {/* Display First NFT Image for Collection Preview */}
+      {nftData.length > 0 ? (
+        <img
+          src={nftData[0].image}
+          alt={nftData[0].name}
+          className="w-full h-48 object-cover mb-4"
+          onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
+        />
+      ) : (
+        <p className="text-gray-600">No images available.</p>
+      )}
+
       <p className="text-gray-600 mb-2">Contract: {collection?.contractAddress}</p>
       <p className="text-gray-600 mb-2">Max Supply: {collection?.maxSupply}</p>
       <p className="text-gray-600 mb-2">Total Minted: {collection?.tokenIds.length}</p>
-      {collection?.mintPrice?<p className="text-gray-600 mb-4">Mint Price: {ethers.formatEther(collection?.mintPrice)} ETH</p>:""}
+      {collection?.mintPrice && (
+        <p className="text-gray-600 mb-4">Mint Price: {ethers.formatEther(collection?.mintPrice)} ETH</p>
+      )}
 
+      {/* Minting Section */}
       <div className="mb-4">
         <label className="block text-gray-700">NFTs to Mint:</label>
         <input
@@ -120,6 +160,26 @@ export default function CollectionDetail() {
       >
         {isMinting ? "Minting..." : "Mint NFT"}
       </button>
+
+      {/* Display All Minted NFTs */}
+      <h3 className="text-lg font-semibold mt-6 mb-2">Minted NFTs</h3>
+      {nftData.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2">
+          {nftData.map((nft) => (
+            <div key={nft.id} className="p-2 border rounded-lg">
+              <img
+                src={nft.image}
+                alt={nft.name}
+                className="w-full h-24 object-cover rounded-md"
+                onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
+              />
+              <p className="text-center text-sm font-semibold mt-1">{nft.name}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-600">No NFTs minted yet.</p>
+      )}
     </div>
   );
 }

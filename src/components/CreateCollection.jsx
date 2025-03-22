@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
-import axios from "axios";
+import { upload } from "@lighthouse-web3/sdk";
 import MARKETPLACE_ABI from "../constant/abi.json";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
-
 
 const Button = ({ children, className, ...props }) => (
   <button className={`px-4 py-2 rounded font-bold text-white transition-colors ${className}`} {...props}>
@@ -33,55 +32,78 @@ export default function CreateCollection() {
   const [maxSupply, setMaxSupply] = useState("");
   const [mintPrice, setMintPrice] = useState("");
   const [maxMintPerWallet, setMaxMintPerWallet] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [folderCID, setFolderCID] = useState(null);
+  const [metadataCIDs, setMetadataCIDs] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
+  const LIGHTHOUSE_API_KEY = import.meta.env.VITE_LIGHTHOUSE_API_KEY;
   const MARKETPLACE_ADDRESS = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
 
-  // **🔹 Upload image to IPFS via Pinata**
-  const uploadToIPFS = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const metadata = JSON.stringify({
-      name: "NFT Collection Image",
-      keyvalues: { type: "collection" },
-    });
-
-    formData.append("pinataMetadata", metadata);
-    formData.append("pinataOptions", JSON.stringify({ cidVersion: 1 }));
+  // 🔹 Upload all images inside a folder and return folder CID
+  const uploadImagesFolder = async () => {
+    if (!files.length) return alert("No files selected!");
+    setIsUploading(true);
 
     try {
-      setIsUploading(true);
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          pinata_api_key: import.meta.env.VITE_PINATA_KEYS,
-          pinata_secret_api_key:import.meta.env.VITE_PINATA_SECRET,
-        },
-      });
-
-      return `ipfs://${res.data.IpfsHash}/`;
+      const response = await upload(files, LIGHTHOUSE_API_KEY, false);  
+      const cid = response.data.Hash;
+      setFolderCID(cid);
+      console.log("📂 Images uploaded in folder CID:", cid);
+      return cid;
     } catch (error) {
-      console.error("IPFS upload failed:", error);
-      alert("Failed to upload image.");
+      console.error("❌ Image upload failed:", error);
+      alert("Failed to upload images.");
       return null;
     } finally {
       setIsUploading(false);
     }
   };
 
-  // **🔹 Handle Collection Creation**
+  // 🔹 Generate metadata JSON for each NFT
+  const generateMetadata = (folderCID, id) => ({
+    name: `${name} #${id}`,
+    description: `NFT ${id} from the ${name} collection`,
+    image: `ipfs://${folderCID}/${id}.png`,  // 🔥 Reference image inside the folder
+    attributes: [{ trait_type: "Edition", value: id }]
+  });
+
+  // 🔹 Upload metadata JSON files
+  const uploadMetadataFiles = async (folderCID) => {
+    try {
+      const metadataList = files.map((_, i) => generateMetadata(folderCID, i + 1));
+      const metadataBlobs = metadataList.map((meta) => new Blob([JSON.stringify(meta)], { type: "application/json" }));
+
+      let uploadedMetadataCIDs = [];
+      for (const blob of metadataBlobs) {
+        const response = await upload([blob], LIGHTHOUSE_API_KEY, false);
+        uploadedMetadataCIDs.push(response.data.Hash);
+      }
+
+      console.log("📄 Metadata CIDs:", uploadedMetadataCIDs);
+      return uploadedMetadataCIDs;
+    } catch (error) {
+      console.error("❌ Metadata upload failed:", error);
+      alert("Failed to upload metadata.");
+      return null;
+    }
+  };
+
+  // 🔹 Handle Collection Creation
   const createCollection = async (e) => {
     e.preventDefault();
-    if (!file) return alert("Please upload an image!");
+    if (!files.length) return alert("Please upload images!");
 
     setIsCreating(true);
 
     try {
-      const baseURI = await uploadToIPFS(file);
-      if (!baseURI) return;
+      const folderCID = await uploadImagesFolder();
+      if (!folderCID) return;
+
+      const metadataCIDs = await uploadMetadataFiles(folderCID);
+      if (!metadataCIDs) return;
+      setMetadataCIDs(metadataCIDs);
 
       const provider = new ethers.BrowserProvider(walletProvider);
       const signer = await provider.getSigner();
@@ -90,22 +112,24 @@ export default function CreateCollection() {
       const tx = await contract.createCollection(
         name,
         symbol,
-        baseURI,
+        metadataCIDs[0], // Store first metadata CID as base
         maxSupply,
         ethers.parseEther(mintPrice),
         maxMintPerWallet
       );
       await tx.wait();
 
-      alert("Collection Created!");
+      alert("✅ Collection Created!");
       setName("");
       setSymbol("");
       setMaxSupply("");
       setMintPrice("");
       setMaxMintPerWallet("");
-      setFile(null);
+      setFiles([]);
+      setFolderCID(null);
+      setMetadataCIDs([]);
     } catch (error) {
-      console.error("Error creating collection:", error);
+      console.error("❌ Error creating collection:", error);
       alert("Failed to create collection.");
     } finally {
       setIsCreating(false);
@@ -138,9 +162,24 @@ export default function CreateCollection() {
             <Input type="number" placeholder="5" value={maxMintPerWallet} onChange={(e) => setMaxMintPerWallet(e.target.value)} required />
           </div>
           <div>
-            <Label>Upload Collection Image</Label>
-            <Input type="file" onChange={(e) => setFile(e.target.files[0])} required />
+            <Label>Upload Collection Images</Label>
+            <Input type="file" multiple onChange={(e) => setFiles([...e.target.files])} required />
           </div>
+
+          {folderCID && (
+            <div className="text-sm text-gray-600">
+              <p>🌐 Folder CID: <a href={`https://gateway.lighthouse.storage/ipfs/${folderCID}`} target="_blank" rel="noopener noreferrer">{folderCID}</a></p>
+              {metadataCIDs.map((cid, i) => (
+                <p key={i}>
+                  NFT #{i + 1}:{" "}
+                  <a href={`https://gateway.lighthouse.storage/ipfs/${cid}`} target="_blank" rel="noopener noreferrer">
+                    View Metadata
+                  </a>
+                </p>
+              ))}
+            </div>
+          )}
+
           <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isUploading || isCreating}>
             {isUploading ? "Uploading..." : isCreating ? "Creating..." : "Create Collection"}
           </Button>
