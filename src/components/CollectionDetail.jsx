@@ -22,7 +22,6 @@ export default function CollectionDetail() {
   useEffect(() => {
     if (!initialCollection) {
       fetchCollectionDetails();
-      
     } else {
       loadNFTMetadata(initialCollection);
     }
@@ -36,9 +35,11 @@ export default function CollectionDetail() {
       const contract = new ethers.Contract(marketplaceContract, NFT_COLLECTION_ABI, provider);
 
       const data = await contract.getCollectionsByContract(contractAddress);
+      const metadataCID = data[2].replace("ipfs://", ""); // Extract metadata CID
+
       const formattedCollection = {
         contractAddress: contractAddress,
-        baseURI: data[2].replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/"),
+        metadataBaseURI: `https://gateway.lighthouse.storage/ipfs/${metadataCID}/`, // Metadata base URL
         maxSupply: data[3].toString(),
         maxMintPerWallet: data[4].toString(),
         mintPrice: data[5].toString(),
@@ -57,19 +58,24 @@ export default function CollectionDetail() {
 
   // 🔹 Fetch NFT Metadata JSON for Minted NFTs
   const loadNFTMetadata = async (collectionData) => {
-    if (!collectionData?.tokenIds?.length || !collectionData?.baseURI) return;
+    if (!collectionData?.tokenIds?.length || !collectionData?.metadataBaseURI) return;
 
     try {
       const metadataList = await Promise.all(
         collectionData.tokenIds.map(async (id) => {
-          const metadataUrl = `${collectionData.baseURI}${id}.json`;
+          const metadataUrl = `${collectionData.metadataBaseURI}${id}.json`;
           try {
             const response = await fetch(metadataUrl);
             const metadata = await response.json();
+
+            // Extract Image CID from metadata and construct image URL
+            const imageCID = metadata.image.replace("ipfs://", "");
+            const imageUrl = `https://gateway.lighthouse.storage/ipfs/${imageCID}`;
+
             return {
               id,
               name: metadata.name || `NFT #${id}`,
-              image: metadata.image.replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/"),
+              image: imageUrl, // Updated image retrieval
             };
           } catch (err) {
             console.error(`Error loading metadata for NFT ${id}:`, err);
@@ -116,11 +122,12 @@ export default function CollectionDetail() {
   };
 
   if (loading) return <div className="text-center mt-10">Loading collection details...</div>;
-console.log(collection)
+  console.log(collection);
+
   return (
     <div className="w-full max-w-md mx-auto bg-white shadow-md rounded-lg overflow-hidden mt-10 p-6">
       <h2 className="text-xl font-bold mb-4">{collection?.name || "NFT Collection"}</h2>
-      
+
       {/* Display First NFT Image for Collection Preview */}
       {nftData.length > 0 ? (
         <img

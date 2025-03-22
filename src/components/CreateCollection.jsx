@@ -4,25 +4,6 @@ import { upload } from "@lighthouse-web3/sdk";
 import MARKETPLACE_ABI from "../constant/abi.json";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 
-const Button = ({ children, className, ...props }) => (
-  <button className={`px-4 py-2 rounded font-bold text-white transition-colors ${className}`} {...props}>
-    {children}
-  </button>
-);
-
-const Input = ({ className, ...props }) => (
-  <input
-    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${className}`}
-    {...props}
-  />
-);
-
-const Label = ({ children, className, ...props }) => (
-  <label className={`block text-sm font-medium text-gray-700 mb-1 ${className}`} {...props}>
-    {children}
-  </label>
-);
-
 export default function CreateCollection() {
   const { isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider("eip155");
@@ -33,27 +14,29 @@ export default function CreateCollection() {
   const [mintPrice, setMintPrice] = useState("");
   const [maxMintPerWallet, setMaxMintPerWallet] = useState("");
   const [files, setFiles] = useState([]);
-  const [folderCID, setFolderCID] = useState(null);
-  const [metadataCIDs, setMetadataCIDs] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const LIGHTHOUSE_API_KEY = import.meta.env.VITE_LIGHTHOUSE_API_KEY;
   const MARKETPLACE_ADDRESS = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
 
-  // 🔹 Upload all images inside a folder and return folder CID
-  const uploadImagesFolder = async () => {
+  // 🖼️ **Step 1: Upload all images in a single folder**
+  const uploadImages = async () => {
     if (!files.length) return alert("No files selected!");
     setIsUploading(true);
 
     try {
-      const response = await upload(files, LIGHTHOUSE_API_KEY, false);  
-      const cid = response.data.Hash;
-      setFolderCID(cid);
-      console.log("📂 Images uploaded in folder CID:", cid);
-      return cid;
+      // Rename files to tokenId.png before upload
+      const renamedFiles = files.map((file, index) => new File([file], `${index + 1}.png`, { type: file.type }));
+
+      // Upload all images as a single batch (folder)
+      const response = await upload(renamedFiles, LIGHTHOUSE_API_KEY, true);
+      const folderCID = response.data.Hash;
+      console.log("Uploaded Images Folder CID:", folderCID);
+
+      return folderCID; // Store single folder CID
     } catch (error) {
-      console.error("❌ Image upload failed:", error);
+      console.error("Image upload failed:", error);
       alert("Failed to upload images.");
       return null;
     } finally {
@@ -61,36 +44,40 @@ export default function CreateCollection() {
     }
   };
 
-  // 🔹 Generate metadata JSON for each NFT
-  const generateMetadata = (folderCID, id) => ({
-    name: `${name} #${id}`,
-    description: `NFT ${id} from the ${name} collection`,
-    image: `ipfs://${folderCID}/${id}.png`,  // 🔥 Reference image inside the folder
-    attributes: [{ trait_type: "Edition", value: id }]
-  });
+  // 📜 **Step 2: Generate metadata files (one per NFT)**
+  const generateMetadataFiles = (folderCID) => {
+    return files.map((_, index) => {
+      const tokenId = index + 1;
+      return {
+        name: `${name} #${tokenId}`,
+        description: `NFT ${tokenId} from the ${name} collection`,
+        image: `ipfs://${folderCID}/${tokenId}.png`, // Only image URL
+        attributes: [{ trait_type: "Edition", value: tokenId }],
+      };
+    });
+  };
 
-  // 🔹 Upload metadata JSON files
-  const uploadMetadataFiles = async (folderCID) => {
+  // 📂 **Step 3: Upload all metadata files in a single folder**
+  const uploadMetadata = async (folderCID) => {
     try {
-      const metadataList = files.map((_, i) => generateMetadata(folderCID, i + 1));
-      const metadataBlobs = metadataList.map((meta) => new Blob([JSON.stringify(meta)], { type: "application/json" }));
+      const metadataFiles = generateMetadataFiles(folderCID);
+      const metadataBlobs = metadataFiles.map((meta, index) => 
+        new File([JSON.stringify(meta)], `${index + 1}.json`, { type: "application/json" })
+      );
 
-      let uploadedMetadataCIDs = [];
-      for (const blob of metadataBlobs) {
-        const response = await upload([blob], LIGHTHOUSE_API_KEY, false);
-        uploadedMetadataCIDs.push(response.data.Hash);
-      }
+      const response = await upload(metadataBlobs, LIGHTHOUSE_API_KEY, true);
+      const metadataFolderCID = response.data.Hash;
+      console.log("Uploaded Metadata Folder CID:", metadataFolderCID);
 
-      console.log("📄 Metadata CIDs:", uploadedMetadataCIDs);
-      return uploadedMetadataCIDs;
+      return metadataFolderCID;
     } catch (error) {
-      console.error("❌ Metadata upload failed:", error);
+      console.error("Metadata upload failed:", error);
       alert("Failed to upload metadata.");
       return null;
     }
   };
 
-  // 🔹 Handle Collection Creation
+  // 🚀 **Step 4: Create the NFT Collection**
   const createCollection = async (e) => {
     e.preventDefault();
     if (!files.length) return alert("Please upload images!");
@@ -98,12 +85,11 @@ export default function CreateCollection() {
     setIsCreating(true);
 
     try {
-      const folderCID = await uploadImagesFolder();
+      const folderCID = await uploadImages();
       if (!folderCID) return;
 
-      const metadataCIDs = await uploadMetadataFiles(folderCID);
-      if (!metadataCIDs) return;
-      setMetadataCIDs(metadataCIDs);
+      const metadataFolderCID = await uploadMetadata(folderCID);
+      if (!metadataFolderCID) return;
 
       const provider = new ethers.BrowserProvider(walletProvider);
       const signer = await provider.getSigner();
@@ -112,24 +98,22 @@ export default function CreateCollection() {
       const tx = await contract.createCollection(
         name,
         symbol,
-        metadataCIDs[0], // Store first metadata CID as base
+        `ipfs://${metadataFolderCID}/`, // Only one CID for all metadata
         maxSupply,
         ethers.parseEther(mintPrice),
         maxMintPerWallet
       );
       await tx.wait();
 
-      alert("✅ Collection Created!");
+      alert("Collection Created!");
       setName("");
       setSymbol("");
       setMaxSupply("");
       setMintPrice("");
       setMaxMintPerWallet("");
       setFiles([]);
-      setFolderCID(null);
-      setMetadataCIDs([]);
     } catch (error) {
-      console.error("❌ Error creating collection:", error);
+      console.error("Error creating collection:", error);
       alert("Failed to create collection.");
     } finally {
       setIsCreating(false);
@@ -142,47 +126,33 @@ export default function CreateCollection() {
         <h3 className="text-xl font-bold mb-4">Create an NFT Collection</h3>
         <form onSubmit={createCollection} className="space-y-4">
           <div>
-            <Label>Name</Label>
-            <Input type="text" placeholder="Collection Name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" className="w-full px-3 py-2 border rounded-md" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div>
-            <Label>Symbol</Label>
-            <Input type="text" placeholder="Collection Symbol" value={symbol} onChange={(e) => setSymbol(e.target.value)} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+            <input type="text" className="w-full px-3 py-2 border rounded-md" value={symbol} onChange={(e) => setSymbol(e.target.value)} required />
           </div>
           <div>
-            <Label>Max Supply</Label>
-            <Input type="number" placeholder="500" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max Supply</label>
+            <input type="number" className="w-full px-3 py-2 border rounded-md" value={maxSupply} onChange={(e) => setMaxSupply(e.target.value)} required />
           </div>
           <div>
-            <Label>Mint Price (ETH)</Label>
-            <Input type="number" placeholder="0.05" value={mintPrice} onChange={(e) => setMintPrice(e.target.value)} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mint Price (ETH)</label>
+            <input type="number" className="w-full px-3 py-2 border rounded-md" value={mintPrice} onChange={(e) => setMintPrice(e.target.value)} required />
           </div>
           <div>
-            <Label>Max Mint Per Wallet</Label>
-            <Input type="number" placeholder="5" value={maxMintPerWallet} onChange={(e) => setMaxMintPerWallet(e.target.value)} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max Mint Per Wallet</label>
+            <input type="number" className="w-full px-3 py-2 border rounded-md" value={maxMintPerWallet} onChange={(e) => setMaxMintPerWallet(e.target.value)} required />
           </div>
           <div>
-            <Label>Upload Collection Images</Label>
-            <Input type="file" multiple onChange={(e) => setFiles([...e.target.files])} required />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Collection Images</label>
+            <input type="file" multiple onChange={(e) => setFiles([...e.target.files])} required />
           </div>
 
-          {folderCID && (
-            <div className="text-sm text-gray-600">
-              <p>🌐 Folder CID: <a href={`https://gateway.lighthouse.storage/ipfs/${folderCID}`} target="_blank" rel="noopener noreferrer">{folderCID}</a></p>
-              {metadataCIDs.map((cid, i) => (
-                <p key={i}>
-                  NFT #{i + 1}:{" "}
-                  <a href={`https://gateway.lighthouse.storage/ipfs/${cid}`} target="_blank" rel="noopener noreferrer">
-                    View Metadata
-                  </a>
-                </p>
-              ))}
-            </div>
-          )}
-
-          <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isUploading || isCreating}>
+          <button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-bold" disabled={isUploading || isCreating}>
             {isUploading ? "Uploading..." : isCreating ? "Creating..." : "Create Collection"}
-          </Button>
+          </button>
         </form>
       </div>
     </div>
