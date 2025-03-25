@@ -10,6 +10,7 @@ import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { arbitrum, mainnet,base } from '@reown/appkit/networks'
 import CollectionDetail from "./components/CollectionDetail";
 import Profile from "./components/Profile"
+import Settings from "./components/Settings"
 
 // 1. Get projectId
 const projectId = '4eca2355824e0f47a6f1dd236a407e0f'
@@ -47,6 +48,7 @@ function App() {
             <Route path="/explore" element={<Explore />} />
             <Route path="/create" element={<Create />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/collection/:contractAddress" element={<CollectionDetail />} />
           </Routes>
         </main>
