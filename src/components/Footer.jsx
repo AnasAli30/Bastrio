@@ -20,8 +20,8 @@ export default function Footer() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* <div>
-            <h3 className="text-lg font-bold mb-2 text-primary">Abstrio</h3>
-            <p className="text-secondary">Discover, collect, and mint unique digital assets on Abstrio</p>
+            <h3 className="text-lg font-bold mb-2 text-primary">Bastrio</h3>
+            <p className="text-secondary">Discover, collect, and mint unique digital assets on Bastrio</p>
           </div> */}
           {/* <div>
             <h4 className="text-lg font-bold mb-2 text-primary">Quick Links</h4>
@@ -56,7 +56,7 @@ export default function Footer() {
           </div> */}
         </div>
         <div className="border-t border-primary mt-8 pt-8 text-center text-secondary">
-          <p>&copy; 2025 Abstrio. All rights reserved.</p>
+          <p>&copy; 2025 Bastrio. All rights reserved.</p>
         </div>
       </div>
     </footer>

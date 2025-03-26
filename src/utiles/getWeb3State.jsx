@@ -10,7 +10,7 @@ export const getWeb3State = async (walletProvider) => {
     const signer = await ethersProvider.getSigner();
     const selectedAccount = signer.address;
 
-    const message = `Welcome to Abstrio!
+    const message = `Welcome to Bastrio!
 
 Click to sign in and accept the Terms of Service and Privacy Policy.
 

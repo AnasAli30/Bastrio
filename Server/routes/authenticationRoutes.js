@@ -14,7 +14,7 @@ router.post("/authentication",async(req,res)=>{
         if(!signature || !accountAddress){
             res.status(500).json({message:"Authentication Failed"})
           }
-          const message = `Welcome to Abstrio!
+          const message = `Welcome to Bastrio!
 
 Click to sign in and accept the Terms of Service and Privacy Policy.
 

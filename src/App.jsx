@@ -20,7 +20,7 @@ const networks = [arbitrum, mainnet,base]
 
 // 3. Create a metadata object - optional
 const metadata = {
-  name: 'Abstrio',
+  name: 'Bastrio',
   description: 'AppKit Example',
   url: 'https://reown.com/appkit', // origin must match your domain & subdomain
   icons: ['https://assets.reown.com/reown-profile-pic.png']

@@ -52,10 +52,10 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="text-2xl font-bold text-primary relative overflow-hidden group">
             <span className="inline-block transition-transform duration-300 group-hover:transform group-hover:-translate-y-full">
-              Abstrio
+              Bastrio
             </span>
             <span className="absolute left-0 inline-block transition-transform duration-300 transform translate-y-full group-hover:transform group-hover:translate-y-0">
-              Abstrio
+              Bastrio
             </span>
           </Link>
 
