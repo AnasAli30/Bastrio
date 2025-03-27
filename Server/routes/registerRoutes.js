@@ -8,7 +8,7 @@ router.post("/register",authentication,async(req,res)=>{
         const {accountAddress} =req.query;
         const {token} = req.body;
         await AUser.create({
-          address:accountAddress,
+          address:accountAddress.toLowerCase(),
           token:token
       }).then((Data)=>{
           console.log(Data);

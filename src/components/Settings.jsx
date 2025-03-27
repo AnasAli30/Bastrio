@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   User, 
   Mail, 
@@ -11,20 +11,39 @@ import {
   MessageSquare 
 } from "lucide-react";
 import { useAppKitAccount } from "@reown/appkit/react";
+import axios from "axios";
 
 export default function Settings() {
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
   const [formData, setFormData] = useState({
-    name: "Crypto Enthusiast",
+    name: "",
     email: "",
-    profileImage: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop",
+    profileImage: "",
     twitter: "",
     github: "",
     instagram: "",
     website: ""
   });
+
+  useEffect(()=>{
+    const fetch =async ()=>{
+   const user = await axios.get(
+        `http://localhost:3000/api/user?accountAddress=${address}`
+      );
+      console.log(user)
+      setFormData(prev => ({
+        ...prev,
+        name: user.data.user.id,
+        email:user.data.user.email,
+        twitter:user.data.user.x,
+      }));
+    }
+    if(address){
+      fetch()
+    }
+  },[address])
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -44,12 +63,20 @@ export default function Settings() {
     e.preventDefault();
     setLoading(true);
     setSaveStatus('idle');
+    console.log(formData)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      let accountAddress = address;
+      let token = localStorage.getItem('token')
+      const updateData = await axios.post(
+        `http://localhost:3000/api/update?accountAddress=${accountAddress}`,
+        { token ,name:formData.name,email:formData.email,x:formData.twitter}
+      );
+
+      console.log(updateData)
       setSaveStatus('success');
     } catch (error) {
+      console.log(error)
       setSaveStatus('error');
     } finally {
       setLoading(false);
@@ -133,12 +160,10 @@ export default function Settings() {
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
 
-              {["twitter", "github", "instagram", "website"].map((field, index) => {
+              {["twitter"].map((field, index) => {
                 const icons = {
                   twitter: Twitter,
-                  github: Github,
-                  instagram: MessageSquare,
-                  website: Globe,
+               
                 };
                 const Icon = icons[field];
 

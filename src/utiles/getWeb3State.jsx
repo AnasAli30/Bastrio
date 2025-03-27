@@ -57,10 +57,10 @@ Wallet address: ${selectedAccount}`;
         );
       } catch (error) {
         if (error.response?.status === 404) {
-          await axios.post(
-            `http://localhost:3000/api/register?accountAddress=${selectedAccount}`,
-            { token }
-          );
+          // await axios.post(
+          //   `http://localhost:3000/api/register?accountAddress=${selectedAccount}`,
+          //   { token }
+          // );
         }
       }
     }
