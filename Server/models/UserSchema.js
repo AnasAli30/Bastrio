@@ -16,6 +16,14 @@ const UserSchema = new mongoose.Schema({
     token:{
         type:String,
         required:true
+    },
+    twitter:{
+        type:String,
+        required:false,
+    },
+    email:{
+        type:String,
+        required:false,
     }
 })
 
