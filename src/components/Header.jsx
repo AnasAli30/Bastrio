@@ -5,25 +5,14 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useAppKitAccount } from "@reown/appkit/react"
 import { useAppKitProvider } from "@reown/appkit/react"
-
+import { useUserContext } from "../context/UserContext";
 export default function Header() {
+  const { userData } = useUserContext();
+  const user = userData?.user;
   const { isConnected, address } = useAppKitAccount()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [userData, setUserData] = useState(null)
-  const { walletProvider } = useAppKitProvider("eip155")
-
-  useEffect(() => {
-    const fetch = async () => {
-      const data = await getWeb3State(walletProvider)
-      setUserData(data)
-      console.log(data)
-    }
-
-    if (isConnected) {
-      fetch()
-    }
-  }, [isConnected, walletProvider])
+ 
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -86,9 +75,9 @@ export default function Header() {
                     className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-colors duration-300 rounded-full p-1 pr-3"
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden">
-                      {userData?.avatar ? (
+                      {user?.image ? (
                         <img
-                          src={userData.avatar || "/placeholder.svg"}
+                          src={user.image || "/placeholder.svg"}
                           alt="Profile"
                           className="w-full h-full object-cover"
                         />
@@ -96,14 +85,14 @@ export default function Header() {
                         address?.slice(2, 4).toUpperCase()
                       )}
                     </div>
-                    <span className="text-sm font-medium">{formatAddress(address)}</span>
+                    {/* <span className="text-sm font-medium">{formatAddress(address)}</span> */}
                   </button>
 
                   {/* Profile Dropdown */}
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-10 border border-gray-100 animate-fadeIn">
                       <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900 truncate">{userData?.name || "My Account"}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{user?.id || "My Account"}</p>
                         <p className="text-xs text-gray-500 truncate">{formatAddress(address)}</p>
                       </div>
                       <Link
@@ -191,9 +180,9 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white text-sm font-medium mr-3">
-                    {userData?.avatar ? (
+                    {user?.image ? (
                       <img
-                        src={userData.avatar || "/placeholder.svg"}
+                        src={user.image || "/placeholder.svg"}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
@@ -202,7 +191,7 @@ export default function Header() {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{userData?.name || "My Profile"}</p>
+                    <p className="text-sm font-medium">{user?.id || "My Profile"}</p>
                     <p className="text-xs text-gray-500">{formatAddress(address)}</p>
                   </div>
                 </Link>

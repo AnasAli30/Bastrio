@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import NFT_COLLECTION_ABI from "../constant/abi.json";
+import { useUserContext } from "../context/UserContext";
 
 export default function Profile() {
+  const { userData } = useUserContext();
   const { address, isConnected } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider("eip155");
   const marketplaceContract = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
@@ -25,9 +27,9 @@ export default function Profile() {
   const [userActivity, setUserActivity] = useState([]);
 
   // Simulated user data - in a real app, this would come from a backend
-  const userData = {
-    name: "Crypto Enthusiast",
-    profileImage: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop",
+  const user = {
+    name: userData.user.id,
+    profileImage: userData.user.image,
     joinedDate: "February 2024"
   };
 
@@ -121,7 +123,7 @@ export default function Profile() {
             <div className="relative">
               <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100">
                 <img
-                  src={userData.profileImage}
+                  src={user.profileImage}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -129,7 +131,7 @@ export default function Profile() {
             </div>
             
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{userData.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}</h1>
               <div className="flex flex-col md:flex-row items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-purple-600" />
@@ -145,7 +147,7 @@ export default function Profile() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-purple-600" />
-                  <span>Joined {userData.joinedDate}</span>
+                  <span>Joined {user.joinedDate}</span>
                 </div>
               </div>
             </div>

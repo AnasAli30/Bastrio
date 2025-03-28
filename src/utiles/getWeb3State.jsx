@@ -19,6 +19,8 @@ This request will not trigger a blockchain transaction or cost any gas fees.
 Wallet address: ${selectedAccount}`;
 
     let token = localStorage.getItem("token");
+    let user;
+    console.log(token,user)
 
     if (!token) {
       try {
@@ -52,8 +54,9 @@ Wallet address: ${selectedAccount}`;
       }
     } else {
       try {
-        await axios.get(
-          `http://localhost:3000/api/user?accountAddress=${selectedAccount}`
+        console.log("now tring user fetch")
+     user =  await axios.get(
+          `http://localhost:3000/api/user?accountAddress=${selectedAccount.toLowerCase()}`
         );
       } catch (error) {
         if (error.response?.status === 404) {
@@ -65,7 +68,7 @@ Wallet address: ${selectedAccount}`;
       }
     }
 
-    return { signer, selectedAccount };
+    return { signer, selectedAccount,user:user.data.user };
   } catch (error) {
     console.error(error);
     throw new Error("Failed to retrieve Web3 state");

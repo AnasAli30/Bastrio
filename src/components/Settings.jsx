@@ -11,9 +11,12 @@ import {
   MessageSquare 
 } from "lucide-react";
 import { useAppKitAccount } from "@reown/appkit/react";
+import { useUserContext } from "../context/UserContext";
 import axios from "axios";
 
 export default function Settings() {
+  const { userData } = useUserContext();
+  const user = userData.user;
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -29,15 +32,12 @@ export default function Settings() {
 
   useEffect(()=>{
     const fetch =async ()=>{
-   const user = await axios.get(
-        `http://localhost:3000/api/user?accountAddress=${address}`
-      );
-      console.log(user)
       setFormData(prev => ({
         ...prev,
-        name: user.data.user.id,
-        email:user.data.user.email,
-        twitter:user.data.user.x,
+        name: user.id,
+        email:user.email,
+        twitter:user.x,
+        profileImage:user.image,
       }));
     }
     if(address){
@@ -45,17 +45,26 @@ export default function Settings() {
     }
   },[address])
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async(e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          profileImage: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      const localUrl = URL.createObjectURL(file);
+      const formData = new FormData();
+      formData.append("image", file);
+      try {
+        const response = await axios.post("http://localhost:3000/api/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (response.data.imageUrl) {
+          setFormData(prev => ({
+            ...prev,
+            profileImage: response.data.imageUrl
+          }));
+        }
+      } catch (error) {
+        toast.error("Error uploading image");
+        console.error("Error uploading image:", error);
+      }
     }
   };
 
@@ -70,10 +79,9 @@ export default function Settings() {
       let token = localStorage.getItem('token')
       const updateData = await axios.post(
         `http://localhost:3000/api/update?accountAddress=${accountAddress}`,
-        { token ,name:formData.name,email:formData.email,x:formData.twitter}
+        { token ,name:formData.name,email:formData.email,x:formData.twitter,image:formData.profileImage}
       );
-
-      console.log(updateData)
+      await new Promise(resolve => setTimeout(resolve, 1500));
       setSaveStatus('success');
     } catch (error) {
       console.log(error)
