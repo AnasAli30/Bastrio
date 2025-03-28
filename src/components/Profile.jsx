@@ -28,8 +28,8 @@ export default function Profile() {
 
   // Simulated user data - in a real app, this would come from a backend
   const user = {
-    name: userData.user.id,
-    profileImage: userData.user.image,
+    name: userData?.user.id,
+    profileImage: userData?.user.image,
     joinedDate: "February 2024"
   };
 

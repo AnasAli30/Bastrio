@@ -16,7 +16,7 @@ import axios from "axios";
 
 export default function Settings() {
   const { userData } = useUserContext();
-  const user = userData.user;
+  const user = userData?.user;
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -34,16 +34,16 @@ export default function Settings() {
     const fetch =async ()=>{
       setFormData(prev => ({
         ...prev,
-        name: user.id,
-        email:user.email,
-        twitter:user.x,
-        profileImage:user.image,
+        name: user?.id,
+        email:user?.email,
+        twitter:user?.x,
+        profileImage:user?.image,
       }));
     }
     if(address){
       fetch()
     }
-  },[address])
+  },[userData])
 
   const handleImageUpload = async(e) => {
     const file = e.target.files?.[0];
