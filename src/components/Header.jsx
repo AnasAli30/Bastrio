@@ -72,7 +72,7 @@ export default function Header() {
                 <div className="relative profile-dropdown">
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-colors duration-300 rounded-full p-1 pr-3"
+                    className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 transition-colors duration-300 rounded-full p-1 pr-1"
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden">
                       {user?.image ? (
