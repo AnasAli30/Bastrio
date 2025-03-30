@@ -10,13 +10,16 @@ const sendVerificationEmail = async (email, token) => {
   });
 
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-
+try{
   await transporter.sendMail({
     from: '"NFT Marketplace" <your-email@gmail.com>',
     to: email,
     subject: "Verify Your Email",
     html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email.</p>`,
-  });
+  })}
+  catch(e){
+    console.log(e)
+  }
 };
 
 module.exports = sendVerificationEmail;

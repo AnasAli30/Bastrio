@@ -14,6 +14,8 @@ import axios from "axios";
 export default function Settings() {
   const { userData } = useUserContext();
   const user = userData?.user;
+  const [emailPending, setEmailPending] = useState(false);
+
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -49,14 +51,15 @@ export default function Settings() {
 
   const handleVerifyEmail = async () => {
     setVerifying(true);
+    setEmailPending(false); // Reset before request
     try {
-      const response = await axios.post("http://localhost:3000/api/verify-email", {
+      const response = await axios.post("http://localhost:3000/api/signup", {
         email: formData.email,
         address,
       });
-
-      if (response.data.success) {
-        setEmailVerified(true);
+  
+      if (response.status === 200) {
+        setEmailPending(true); // Show "Check your email" message
       } else {
         throw new Error("Verification failed");
       }
@@ -65,6 +68,7 @@ export default function Settings() {
     }
     setVerifying(false);
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +77,7 @@ export default function Settings() {
 
     try {
       let token = localStorage.getItem("token");
-      await axios.post(`http://localhost:3000/api/update`, {
+      await axios.post(`http://localhost:3000/api/update?accountAddress=${address}`, {
         token,
         name: formData.name,
         email: formData.email,
@@ -143,7 +147,7 @@ export default function Settings() {
                 </div>
 
                 {/* Verify Email Button */}
-                {!emailVerified && formData.email && (
+                {!emailVerified && formData.email && !emailPending && (
                   <button
                     type="button"
                     onClick={handleVerifyEmail}
@@ -160,8 +164,14 @@ export default function Settings() {
                     )}
                   </button>
                 )}
+                {!emailVerified && emailPending && (
+  <div className="mt-2 text-green-600">
+    Verification email sent! Please check your inbox.
+  </div>
+)}
 
-                {emailVerified && (
+
+                {emailVerified &&  (
                   <div className="mt-2 flex items-center text-green-600">
                     <CheckCircle className="w-5 h-5 mr-2" />
                     <span>Email Verified</span>

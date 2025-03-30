@@ -20,7 +20,7 @@ app.use("/api",register);
 app.use("/api",update);
 app.use("/api",user);
 app.use("/api",upload);
-app.use("/",verify)
+app.use("/api",verify)
 
 
 

@@ -6,25 +6,27 @@ const router = express.Router();
 
 // Signup route
 router.post("/signup", async (req, res) => {
-  const { email } = req.body;
+  console.log("called")
+  const { email ,address} = req.body;
   const existingUser = await User.findOne({ email });
-
-  if (existingUser) return res.status(400).json({ message: "Email already exists" });
+console.log(email,existingUser)
+  if (existingUser?.email == email && (existingUser?.isVerified)) return res.status(400).json({ message: "Email already exists" });
 
   const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-  const newUser = new User({ email, verificationToken });
+
+  const newUser = await User.findOneAndUpdate({address} , {email:email})
   await newUser.save();
 
   await sendVerificationEmail(email, verificationToken);
 
-  res.json({ message: "Verification email sent" });
+  res.json({ status:200, message: "Verification email sent" });
 });
 
 // Email verification route
 router.get("/verify-email", async (req, res) => {
   const { token } = req.query;
-
+ 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findOne({ email: decoded.email });
