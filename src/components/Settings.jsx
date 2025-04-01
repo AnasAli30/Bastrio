@@ -3,96 +3,148 @@ import {
   User, 
   Mail, 
   Twitter, 
+  Github, 
+  Globe, 
   Loader2, 
   CheckCircle, 
-  AlertCircle
+  AlertCircle,
+  MessageSquare 
 } from "lucide-react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useUserContext } from "../context/UserContext";
 import axios from "axios";
 
+
 export default function Settings() {
+  
+ const [emailPending, setEmailPending] = useState(false);
   const { userData } = useUserContext();
   const user = userData?.user;
-  const [emailPending, setEmailPending] = useState(false);
-
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("idle");
+  const [saveStatus, setSaveStatus] = useState('idle');
+
   const [emailVerified, setEmailVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [emailChanged, setEmailChanged] = useState(false); //
+  const [verificationMessage, setVerificationMessage] = useState(""); 
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     profileImage: "",
     twitter: "",
+    github: "",
+    instagram: "",
+    website: ""
   });
 
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user?.id || "",
-        email: user?.email || "",
-        twitter: user?.x || "",
-        profileImage: user?.image || "",
-      });
-      setEmailVerified(user?.isVerified || false);
+  useEffect(()=>{
+    const fetch =async ()=>{
+      setFormData(prev => ({
+        ...prev,
+        name: user?.id,
+        email:user?.email,
+        twitter:user?.x,
+        profileImage:user?.image,
+      }));
+setEmailVerified(user?.isVerified)
+setInitialEmail(user?.email || "");  // 📌 Set the initial email
     }
-  }, [userData]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-
-    if (name === "email") {
-      setEmailVerified(false);
+    if(address){
+      fetch()
     }
-  };
+  },[userData])
 
   const handleVerifyEmail = async () => {
     setVerifying(true);
-    setEmailPending(false); // Reset before request
     try {
       const response = await axios.post("http://localhost:3000/api/signup", {
         email: formData.email,
         address,
       });
-  
-      if (response.status === 200) {
-        setEmailPending(true); // Show "Check your email" message
+
+      
+      if (response.status==200) {
+        console.log(response)
+        setVerificationMessage("✅ Verification email sent successfully! check your inbox");
       } else {
-        throw new Error("Verification failed");
+        throw new Error(response.data.message || "Verification failed.");
       }
     } catch (error) {
       console.error("Email verification error:", error);
+      setVerificationMessage(
+        error.response?.data?.message || "❌ An error occurred. Please try again."
+      ); // 📢 Display error message
+    } finally {
+      setVerifying(false);
     }
-    setVerifying(false);
   };
-  
+
+
+  const handleImageUpload = async(e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      const formData = new FormData();
+      formData.append("image", file);
+      try {
+        const response = await axios.post("http://localhost:3000/api/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (response.data.imageUrl) {
+          setFormData(prev => ({
+            ...prev,
+            profileImage: response.data.imageUrl
+          }));
+        }
+      } catch (error) {
+        toast.error("Error uploading image");
+        console.error("Error uploading image:", error);
+      }
+
+
+    }
+
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setSaveStatus("idle");
+    setSaveStatus('idle');
+    console.log(formData)
 
     try {
-      let token = localStorage.getItem("token");
-      await axios.post(`http://localhost:3000/api/update?accountAddress=${address}`, {
-        token,
-        name: formData.name,
-        email: formData.email,
-        x: formData.twitter,
-        image: formData.profileImage,
-      });
+      let accountAddress = address;
+      let token = localStorage.getItem('token')
+      const updateData = await axios.post(
+        `http://localhost:3000/api/update?accountAddress=${accountAddress}`,
+        { token ,name:formData.name,email:formData.email,x:formData.twitter,image:formData.profileImage}
+      );
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setSaveStatus('success');
 
-      setSaveStatus("success");
+
     } catch (error) {
-      console.error(error);
-      setSaveStatus("error");
+      console.log(error)
+      setSaveStatus('error');
     } finally {
       setLoading(false);
-      setTimeout(() => setSaveStatus("idle"), 3000);
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "email" && value !== user?.email) {
+      setEmailChanged(true);
+      setEmailVerified(false)
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -105,9 +157,22 @@ export default function Settings() {
             {/* Profile Image */}
             <div className="flex flex-col items-center space-y-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100">
-                  <img src={formData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100 transition-transform duration-300 ease-out transform group-hover:scale-105">
+                  <img
+                    src={formData.profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <p className="text-white text-sm font-medium">Change Photo</p>
+                  </div>
                 </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
               </div>
             </div>
 
@@ -123,13 +188,13 @@ export default function Settings() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="Your display name"
                   />
                 </div>
               </div>
 
-              {/* Email Input + Verify Button */}
+
               <div className="relative">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
@@ -140,14 +205,14 @@ export default function Settings() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    disabled={emailVerified}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+
                     placeholder="your@email.com"
                   />
                 </div>
 
-                {/* Verify Email Button */}
-                {!emailVerified && formData.email && !emailPending && (
+
+                {!emailVerified && emailChanged && (
                   <button
                     type="button"
                     onClick={handleVerifyEmail}
@@ -164,42 +229,82 @@ export default function Settings() {
                     )}
                   </button>
                 )}
-                {!emailVerified && emailPending && (
-  <div className="mt-2 text-green-600">
-    Verification email sent! Please check your inbox.
-  </div>
-)}
 
-
-                {emailVerified &&  (
-                  <div className="mt-2 flex items-center text-green-600">
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    <span>Email Verified</span>
+{verificationMessage && (
+                  <div
+                    className={`mt-2 flex items-center ${
+                      emailVerified ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    <span>{verificationMessage}</span>
                   </div>
                 )}
+             
+
+{emailVerified && (
+                  <div className="mt-2 flex items-center text-green-600">
+
+
+
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    <span>Email Verified</span>
+                    </div>
+                )}
+
+                
               </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
+
+              {["twitter"].map((field, index) => {
+                const icons = {
+                  twitter: Twitter,
+               
+                };
+                const Icon = icons[field];
+
+                return (
+                  <div className="relative" key={index}>
+                    <div className="relative">
+                      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        name={field}
+                        value={formData[field]}
+                        onChange={handleInputChange}
+                        className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        placeholder={`Enter your ${field}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Submit Button */}
             <div className="flex items-center justify-end space-x-4">
-              {saveStatus === "success" && (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  <span>Settings saved successfully!</span>
-                </div>
-              )}
-              {saveStatus === "error" && (
-                <div className="flex items-center text-red-600">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  <span>Error saving settings.</span>
-                </div>
-              )}
-
+              <div className="flex-1">
+                {saveStatus === 'success' && (
+                  <div className="flex items-center text-green-600 animate-fade-in">
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    <span>Settings saved successfully!</span>
+                  </div>
+                )}
+                {saveStatus === 'error' && (
+                  <div className="flex items-center text-red-600 animate-fade-in">
+                    <AlertCircle className="w-5 h-5 mr-2" />
+                    <span>Error saving settings. Please try again.</span>
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-6 py-2 rounded-lg text-white transition-all ${
-                  loading ? "bg-purple-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700"
+                className={`px-6 py-2 rounded-lg font-medium text-white transition-all duration-200 transform ${
+                  loading ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
                 }`}
               >
                 {loading ? (
@@ -208,7 +313,7 @@ export default function Settings() {
                     Saving...
                   </span>
                 ) : (
-                  "Save Changes"
+                  'Save Changes'
                 )}
               </button>
             </div>

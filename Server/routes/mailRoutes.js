@@ -24,7 +24,7 @@ console.log(email,existingUser)
 });
 
 // Email verification route
-router.get("/verify-email", async (req, res) => {
+router.post("/verify-email", async (req, res) => {
   console.log("called")
   const { token } = req.query;
  
