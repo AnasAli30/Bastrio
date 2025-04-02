@@ -11,6 +11,7 @@ import { arbitrum, mainnet,base } from '@reown/appkit/networks'
 import CollectionDetail from "./components/CollectionDetail";
 import Profile from "./components/Profile"
 import Settings from "./components/Settings"
+import VerifyEmail from "./components/VerifyEmail"
 
 // 1. Get projectId
 const projectId = '4eca2355824e0f47a6f1dd236a407e0f'
@@ -50,6 +51,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/collection/:contractAddress" element={<CollectionDetail />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
           </Routes>
         </main>
         <Footer />
