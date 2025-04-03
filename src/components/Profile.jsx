@@ -15,7 +15,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  ArrowUpDown
 } from "lucide-react";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import NFT_COLLECTION_ABI from "../constant/abi.json";
@@ -28,6 +29,7 @@ export default function Profile() {
   const marketplaceContract = "0xF762a878921f173192b8E4F89A42E5797a523bdE";
 
   const [collections, setCollections] = useState([]);
+  const [collectionsStat, setCollectionsStat] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('collections');
   const [userActivity, setUserActivity] = useState([]);
@@ -48,6 +50,7 @@ export default function Profile() {
     if (isConnected && address) {
       fetchUserCollections();
       fetchUserActivity();
+      fetchUserStat();
     }
   }, [address, isConnected]);
 
@@ -74,6 +77,34 @@ export default function Profile() {
       }));
 
       setCollections(formattedCollections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchUserStat = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get("http://localhost:3000/api/getWalletToken", {
+        params: {
+          owner: address
+        },
+      });
+      
+      const formattedCollections = await Promise.all(data.map(async (collection) => {
+        return {
+          count: collection.count,
+          listedCount: collection.listedCount,
+          name:collection.contractName,
+          image: collection?.collectionImage || "https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500" ,
+          contractAddress:collection.contractAddress,
+          floor:collection.floor,
+          value:collection.value
+        };
+      }));
+
+      setCollectionsStat(formattedCollections);
     } catch (error) {
       console.error("Error fetching collections:", error);
     } finally {
@@ -117,6 +148,25 @@ export default function Profile() {
     collection.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center">
@@ -132,55 +182,108 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
       <div className="flex">
-        {/* Sidebar */}
-        <div className={`fixed h-screen bg-white shadow-xl transition-all duration-300 z-10 ${sidebarOpen ? 'w-80' : 'w-0'}`}>
+       {/* Sidebar */}
+       <div className={`fixed h-screen bg-gray-800 shadow-xl transition-all duration-300 z-10 ${sidebarOpen ? 'w-96' : 'w-0'}`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="absolute -right-10 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-r-lg shadow-md"
+            className="absolute -right-10 top-1/2 transform -translate-y-1/2 bg-gray-900 p-2 rounded-r-lg shadow-md hover:bg-gray-800 transition-colors"
           >
-            {sidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+           {sidebarOpen ? (
+              <ChevronLeft className="w-6 h-6 text-white" />
+            ) : (
+              <ChevronRight className="w-6 h-6 text-white" />
+            )}
           </button>
           
+          
           {sidebarOpen && (
-            <div className="p-6 h-full overflow-y-auto">
+            <div className="p-4 h-full overflow-y-auto text-white">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Filter className="w-5 h-5 text-purple-600" />
-                  <h3 className="text-lg font-semibold">Collections Filter</h3>
+                  <Filter className="w-5 h-5 text-purple-400" />
+                  <h3 className="text-lg font-semibold">Collections</h3>
                 </div>
                 <input
                   type="text"
                   placeholder="Search collections..."
-                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-400"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+
+              {/* Collection Headers */}
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-sm text-gray-400 border-b border-gray-700">
+                <div className="col-span-5">
+                  <button
+                    onClick={() => handleSort("name")}
+                    className="flex items-center gap-1 hover:text-white"
+                  >
+                    Name
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="col-span-2">
+                  <button
+                    onClick={() => handleSort("floor")}
+                    className="flex items-center gap-1 hover:text-white"
+                  >
+                    Floor
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="col-span-2">
+                  <button
+                    onClick={() => handleSort("value")}
+                    className="flex items-center gap-1 hover:text-white"
+                  >
+                    Value
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="col-span-3">
+                  <button
+                    onClick={() => handleSort("listedCount")}
+                    className="flex items-center gap-1 hover:text-white"
+                  >
+                    Listed
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
               
-              <div className="space-y-3">
-                {filteredCollections.map((collection) => (
+              <div className="space-y-1">
+                {collectionsStat.map((collection) => (
                   <button
                     key={collection.address}
                     onClick={() => setSelectedCollection(collection)}
-                    className={`w-full p-3 rounded-lg transition-all ${
+                    className={`w-full p-2 rounded-lg transition-all grid grid-cols-12 gap-2 items-center ${
                       selectedCollection?.address === collection.address
-                        ? 'bg-purple-100 border-purple-500'
-                        : 'hover:bg-gray-50'
+                        ? 'bg-purple-900/50'
+                        : 'hover:bg-gray-800'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="col-span-5 flex items-center gap-2">
                       <img
                         src={collection.image}
                         alt={collection.name}
-                        className="w-12 h-12 rounded-lg object-cover"
+                        className="w-8 h-8 rounded-lg object-cover"
                         onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/48?text=Collection";
+                          e.target.src = "https://via.placeholder.com/32?text=NFT";
                         }}
                       />
-                      <div className="text-left">
-                        <h4 className="font-medium text-gray-900 truncate">{collection.name}</h4>
-                        <p className="text-sm text-gray-500">#{collection.token_id}</p>
-                      </div>
+                      <span className="text-sm font-medium truncate">
+                        {collection.name}
+                      </span>
+                    </div>
+                    <div className="col-span-2 text-sm text-gray-400">
+                      {collection?.floor?.toFixed(4)}
+                    </div>
+                    <div className="col-span-2 text-sm text-gray-400">
+                      {collection?.value?.toFixed(4)}
+                    </div>
+                    <div className="col-span-3 text-sm text-gray-400">
+                      {collection.listedCount} / {collection.count}
                     </div>
                   </button>
                 ))}

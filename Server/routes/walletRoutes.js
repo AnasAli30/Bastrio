@@ -27,5 +27,43 @@ router.get("/getOwnerWallet", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch data" });
   }
 });
+
+router.get("/getWalletToken", async (req, res) => {
+  try {
+    // Extract query parameters from the client request
+    const { owner } = req.query;
+
+    if (!owner) {
+      return res.status(400).json({ error: "Owner address is required" });
+    }
+    const apiUrl = `${process.env.apiUrl}?ownerAltAddress&owner=${owner}`;
+    // Make the GET request
+    const response = await axios.get(apiUrl);
+
+const obj = response.data.data;
+//  const data1 = res1.data;
+   const apiUrl2= `${process.env.stat_api}?ownerAltAddress&owner=${owner}`
+
+   const response2 = await axios.get(apiUrl2);
+   const array = response2.data.data;
+   const data= array.map(item => {
+    const floor = obj[item.contractAddress] || null;
+    return {
+      ...item,
+      floor,
+      value: floor !== null ? floor * item.count : null 
+    };
+  });
+  
+
+  const sortedData = data.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+
+    res.json(sortedData);
+  } catch (error) {
+    console.error("Error fetching owner wallet:", error.message);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
 module.exports = router;
 
