@@ -6,6 +6,7 @@ const update = require("./routes/updateRoutes")
 const user = require("./routes/userRoutes")
 const verify = require("./routes/mailRoutes")
 const upload = require("./routes/uploadRoutes")
+const wallet = require("./routes/walletRoutes")
 const app = express();
 require('dotenv').config()
 const connectDB = require('./db/connect');
@@ -21,6 +22,7 @@ app.use("/api",update);
 app.use("/api",user);
 app.use("/api",upload);
 app.use("/api",verify)
+app.use("/api",wallet)
 
 
 

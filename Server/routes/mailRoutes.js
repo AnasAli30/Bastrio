@@ -15,7 +15,7 @@ console.log(email,existingUser)
   const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
 
-  const newUser = await User.findOneAndUpdate({address} , {email:email})
+  const newUser = await User.findOneAndUpdate({address} , {email:email , isVerified:false})
   await newUser.save();
 
   await sendVerificationEmail(email, verificationToken);
