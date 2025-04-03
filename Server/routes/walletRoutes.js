@@ -19,9 +19,9 @@ router.get("/getOwnerWallet", async (req, res) => {
 
     // Make the GET request
     const response = await axios.get(apiUrl);
-    console.log(response)
+    // console.log(response)
     // Send the fetched data to the client
-    res.json(response.data);
+    res.json(response.data.data);
   } catch (error) {
     console.error("Error fetching owner wallet:", error.message);
     res.status(500).json({ error: "Failed to fetch data" });
