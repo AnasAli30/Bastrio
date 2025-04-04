@@ -36,7 +36,7 @@ export default function Profile() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-
+console.log(activeTab)
   // Simulated user data - in a real app, this would come from a backend
   const user = {
     name: userData?.user.id,
@@ -113,20 +113,24 @@ export default function Profile() {
   };
 
   const fetchUserActivity = async () => {
-    const mockActivity = [
-      {
-        type: "mint",
-        collection: "CryptoPunks",
-        tokenId: "1234",
-        timestamp: Date.now() - 3600000,
-      },
-      {
-        type: "create",
-        collection: "My Collection",
-        timestamp: Date.now() - 86400000,
-      },
-    ];
-    setUserActivity(mockActivity);
+    try {
+      setLoading(true);
+      const { data } = await axios.get("http://localhost:3000/api/getActivity", {
+        params: {
+          owner: address,
+          limit:100
+        },
+      });
+
+      console.log(data)
+
+      setUserActivity(data);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+    } finally {
+      setLoading(false);
+    }
+    // setUserActivity(mockActivity);
   };
 
   const formatAddress = (addr) => {
@@ -134,6 +138,7 @@ export default function Profile() {
   };
 
   const formatTimeAgo = (timestamp) => {
+     timestamp = new Date(timestamp).getTime();
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds < 60) return `${seconds} seconds ago`;
     const minutes = Math.floor(seconds / 60);
@@ -213,7 +218,7 @@ export default function Profile() {
               </div>
 
               {/* Collection Headers */}
-              <div className="grid grid-cols-12 gap-2 px-3 py-2 text-sm text-gray-400 border-b border-gray-700">
+              <div className="grid grid-cols-12 gap-3 px-3 py-2 text-sm text-gray-400 border-b border-gray-700">
                 <div className="col-span-5">
                   <button
                     onClick={() => handleSort("name")}
@@ -257,11 +262,7 @@ export default function Profile() {
                   <button
                     key={collection.address}
                     onClick={() => setSelectedCollection(collection)}
-                    className={`w-full p-2 rounded-lg transition-all grid grid-cols-12 gap-2 items-center ${
-                      selectedCollection?.address === collection.address
-                        ? 'bg-purple-900/50'
-                        : 'hover:bg-gray-800'
-                    }`}
+                    className={`w-full p-3 rounded-lg transition-all grid grid-cols-12 gap-2  items-center bg-purple-900/50`}
                   >
                     <div className="col-span-5 flex items-center gap-2">
                       <img
@@ -432,6 +433,7 @@ export default function Profile() {
                           <div className="p-2 rounded-full bg-purple-100">
                             {activity.type === 'mint' ? (
                               <ImageIcon className="w-5 h-5 text-purple-600" />
+                              // <img src=`${activity.collection.image_url}`` alt="" />
                             ) : (
                               <FolderOpen className="w-5 h-5 text-purple-600" />
                             )}
@@ -439,11 +441,11 @@ export default function Profile() {
                           <div className="flex-1">
                             <p className="text-gray-900 font-medium">
                               {activity.type === 'mint'
-                                ? `Minted NFT #${activity.tokenId} from ${activity.collection}`
-                                : `Created collection ${activity.collection}`}
+                                ? `Minted NFT #${activity.token_id} ${activity.collection.name} from ${activity.collection}`
+                                : `Sold #${activity.token_id} ${activity.collection.name} at  ${activity.price} ${activity.currency}`  }
                             </p>
                             <p className="text-sm text-gray-500">
-                              {formatTimeAgo(activity.timestamp)}
+                              {formatTimeAgo(activity.time)}
                             </p>
                           </div>
                         </div>

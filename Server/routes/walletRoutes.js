@@ -28,6 +28,29 @@ router.get("/getOwnerWallet", async (req, res) => {
   }
 });
 
+router.get("/getActivity", async (req, res) => {
+  try {
+    // Extract query parameters from the client request
+    const { owner, limit = 100 } = req.query;
+
+    if (!owner) {
+      return res.status(400).json({ error: "Owner address is required" });
+    }
+
+    // Construct the external API URL
+    const apiUrl = `${process.env.activity_api}?owner=${owner}&ownerAltAddress&limit=${limit}`;
+
+    // Make the GET request
+    const response = await axios.get(apiUrl);
+    // console.log(response)
+    // Send the fetched data to the client
+    res.json(response.data.data);
+  } catch (error) {
+    console.error("Error fetching owner wallet:", error.message);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
 router.get("/getWalletToken", async (req, res) => {
   try {
     // Extract query parameters from the client request
