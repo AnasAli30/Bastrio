@@ -8,7 +8,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
       <UserProvider>
       <App />
-      </UserProvider>,
+      </UserProvider>
 
-  </StrictMode>,
+  </StrictMode>
 )

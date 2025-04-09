@@ -6,16 +6,16 @@ import MintNFT from "./CreateCollection"
 
 export default function Home() {
   return (
-    <div>
-      <Hero />
-   
-      <section className="py-12 sm:py-20 bg-white">
-        {/* <div className="container mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">
-            Create Your NFT on Any Chain
+    <div className="min-h-screen bg-background-light dark:bg-background-dark transition-colors duration-400">
+      <div className="container mx-auto px-4 py-8 space-y-12">
+        <Hero />
+        <section className="card p-8">
+          <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-6">
+            Featured Collections
           </h2>
-        </div> */}
-      </section>
+          <FeaturedNFTs />
+        </section>
+      </div>
     </div>
   )
 }

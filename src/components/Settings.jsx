@@ -14,20 +14,17 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { useUserContext } from "../context/UserContext";
 import axios from "axios";
 
-
 export default function Settings() {
-  
- const [emailPending, setEmailPending] = useState(false);
+  const [emailPending, setEmailPending] = useState(false);
   const { userData } = useUserContext();
   const user = userData?.user;
   const { address } = useAppKitAccount();
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
-
   const [emailVerified, setEmailVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [emailChanged, setEmailChanged] = useState(false); //
-  const [verificationMessage, setVerificationMessage] = useState(""); 
+  const [emailChanged, setEmailChanged] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -148,22 +145,22 @@ setInitialEmail(user?.email || "");  // 📌 Set the initial email
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-400">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-lg bg-opacity-90">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Profile Settings</h2>
+        <div className="card p-8">
+          <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-8">Profile Settings</h2>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Profile Image */}
             <div className="flex flex-col items-center space-y-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-100 to-indigo-100 transition-transform duration-300 ease-out transform group-hover:scale-105">
+                <div className="w-32 h-32 rounded-full overflow-hidden bg-surface-light dark:bg-surface-dark transition-all duration-300 ease-out transform group-hover:scale-105">
                   <img
                     src={formData.profileImage}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <p className="text-white text-sm font-medium">Change Photo</p>
                   </div>
                 </div>
@@ -179,45 +176,46 @@ setInitialEmail(user?.email || "");  // 📌 Set the initial email
             {/* Basic Info */}
             <div className="space-y-6">
               <div className="relative">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                  Display Name
+                </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input
                     id="name"
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="input pl-10"
                     placeholder="Your display name"
                   />
                 </div>
               </div>
 
-
               <div className="relative">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label htmlFor="email" className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                  Email Address
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input
                     id="email"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-
+                    className="input pl-10"
                     placeholder="your@email.com"
                   />
                 </div>
-
 
                 {!emailVerified && emailChanged && (
                   <button
                     type="button"
                     onClick={handleVerifyEmail}
                     disabled={verifying}
-                    className="mt-2 px-4 py-2 text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all"
+                    className="btn btn-primary mt-2"
                   >
                     {verifying ? (
                       <span className="flex items-center">
@@ -230,85 +228,81 @@ setInitialEmail(user?.email || "");  // 📌 Set the initial email
                   </button>
                 )}
 
-{verificationMessage && (
-                  <div
-                    className={`mt-2 flex items-center ${
-                      emailVerified ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
+                {verificationMessage && (
+                  <div className={`mt-2 flex items-center ${
+                    emailVerified ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400"
+                  }`}>
                     <span>{verificationMessage}</span>
                   </div>
                 )}
-             
 
-{emailVerified && (
-                  <div className="mt-2 flex items-center text-green-600">
-
-
-
+                {emailVerified && (
+                  <div className="mt-2 flex items-center text-green-500 dark:text-green-400">
                     <CheckCircle className="w-5 h-5 mr-2" />
                     <span>Email Verified</span>
-                    </div>
-                )}
-
-                
-              </div>
-            </div>
-
-            {/* Social Links */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Social Links</h3>
-
-              {["twitter"].map((field, index) => {
-                const icons = {
-                  twitter: Twitter,
-               
-                };
-                const Icon = icons[field];
-
-                return (
-                  <div className="relative" key={index}>
-                    <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        name={field}
-                        value={formData[field]}
-                        onChange={handleInputChange}
-                        className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                        placeholder={`Enter your ${field}`}
-                      />
-                    </div>
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-text-light dark:text-text-dark">Social Links</h3>
+                
+                <div className="relative">
+                  <div className="relative">
+                    <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <input
+                      type="text"
+                      name="twitter"
+                      value={formData.twitter}
+                      onChange={handleInputChange}
+                      className="input pl-10"
+                      placeholder="Twitter username"
+                    />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="relative">
+                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <input
+                      type="text"
+                      name="github"
+                      value={formData.github}
+                      onChange={handleInputChange}
+                      className="input pl-10"
+                      placeholder="Github username"
+                    />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <input
+                      type="url"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      className="input pl-10"
+                      placeholder="Your website"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}
             <div className="flex items-center justify-end space-x-4">
-              <div className="flex-1">
-                {saveStatus === 'success' && (
-                  <div className="flex items-center text-green-600 animate-fade-in">
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    <span>Settings saved successfully!</span>
-                  </div>
-                )}
-                {saveStatus === 'error' && (
-                  <div className="flex items-center text-red-600 animate-fade-in">
-                    <AlertCircle className="w-5 h-5 mr-2" />
-                    <span>Error saving settings. Please try again.</span>
-                  </div>
-                )}
-              </div>
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-6 py-2 rounded-lg font-medium text-white transition-all duration-200 transform ${
-                  loading ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
+                className={`btn btn-primary min-w-[120px] ${
+                  loading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
               >
                 {loading ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
                   </span>
@@ -316,6 +310,20 @@ setInitialEmail(user?.email || "");  // 📌 Set the initial email
                   'Save Changes'
                 )}
               </button>
+
+              {saveStatus === 'success' && (
+                <div className="flex items-center text-green-500 dark:text-green-400">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  <span>Saved successfully</span>
+                </div>
+              )}
+
+              {saveStatus === 'error' && (
+                <div className="flex items-center text-red-500 dark:text-red-400">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  <span>Error saving changes</span>
+                </div>
+              )}
             </div>
           </form>
         </div>

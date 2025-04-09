@@ -1,28 +1,26 @@
 import React from "react"
 import { Link } from "react-router-dom"
 
-const Button = ({ children, className, ...props }) => (
-  <button
-    className={`px-6 py-3 rounded-full font-bold text-base sm:text-lg transition duration-300 ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-)
-
 export default function Hero() {
   return (
-    <section className="bg-gradient-to-r from-primary to-background text-secondary py-12 sm:py-20">
-      <div className="container mx-auto px-4 sm:px-6 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-          Discover, Collect, and Mint Unique NFTs on Bastrio
-        </h1>
-        <p className="text-lg sm:text-xl mb-8">
-          Explore the world of digital art and own a piece of the future with Bastrio on Base Chain
-        </p>
-        {/* <Link to="/mint">
-          <Button className="bg-secondary text-background hover:bg-opacity-80">Start Minting</Button>
-        </Link> */}
+    <section className="relative overflow-hidden">
+      <div className="card p-8 md:p-12">
+        <div className="max-w-3xl">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary-light to-purple-600 dark:from-primary-dark dark:to-purple-400 bg-clip-text text-transparent">
+            Discover, Collect, and Create Extraordinary NFTs
+          </h1>
+          <p className="text-lg md:text-xl text-text-light dark:text-text-dark opacity-90 mb-8">
+            Join the future of digital collectibles. Create, buy, sell, and trade unique NFTs on multiple blockchains.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/explore" className="btn btn-primary">
+              Explore Collections
+            </Link>
+            <Link to="/create" className="btn btn-secondary">
+              Start Creating
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   )
