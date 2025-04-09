@@ -13,6 +13,7 @@ import Profile from "./components/Profile"
 import Settings from "./components/Settings"
 import VerifyEmail from "./components/VerifyEmail"
 import { ThemeProvider } from "./context/ThemeContext"
+import TrendingHeatmap from './components/TrendingHeatmap'
 
 // 1. Get projectId
 const projectId = '4eca2355824e0f47a6f1dd236a407e0f'
@@ -54,6 +55,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/collection/:contractAddress" element={<CollectionDetail />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/trending" element={<TrendingHeatmap />} />
             </Routes>
           </main>
           <Footer />

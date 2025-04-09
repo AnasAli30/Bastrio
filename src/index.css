@@ -42,6 +42,18 @@
   .animate-slideDown {
     animation: slideDown 0.3s ease-in-out;
   }
+
+  .animate-float {
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 12s ease-in-out infinite;
+  }
+
+  .animate-float-fast {
+    animation: float 6s ease-in-out infinite;
+  }
 }
 
 @keyframes fadeIn {
@@ -61,6 +73,24 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  50% {
+    transform: translateY(0px) translateX(10px);
+  }
+  75% {
+    transform: translateY(10px) translateX(5px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
   }
 }
 

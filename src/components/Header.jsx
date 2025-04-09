@@ -58,6 +58,12 @@ export default function Header() {
               Drops
             </Link>
             <Link
+              to="/trending"
+              className="text-text-light dark:text-text-dark hover:text-primary-light dark:hover:text-primary-dark transition-all duration-300 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary-light dark:after:bg-primary-dark after:transition-all hover:after:w-full"
+            >
+              Heatmap
+            </Link>
+            <Link
               to="/create"
               className="text-text-light dark:text-text-dark hover:text-primary-light dark:hover:text-primary-dark transition-all duration-300 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary-light dark:after:bg-primary-dark after:transition-all hover:after:w-full"
             >
@@ -158,6 +164,13 @@ export default function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               Drops
+            </Link>
+            <Link
+              to="/trending"
+              className="block py-3 text-text-light dark:text-text-dark hover:text-primary-light dark:hover:text-primary-dark hover:bg-gray-100 dark:hover:bg-gray-700 px-3 rounded-md transition-colors duration-200"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Trending
             </Link>
             <Link
               to="/create"
