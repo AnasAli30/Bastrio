@@ -7,6 +7,7 @@ const user = require("./routes/userRoutes")
 const verify = require("./routes/mailRoutes")
 const upload = require("./routes/uploadRoutes")
 const wallet = require("./routes/walletRoutes")
+const home = require("./routes/homeRoutes")
 const app = express();
 require('dotenv').config()
 const connectDB = require('./db/connect');
@@ -23,7 +24,7 @@ app.use("/api",user);
 app.use("/api",upload);
 app.use("/api",verify)
 app.use("/api",wallet)
-
+app.use("/api",home)
 
 
 connectDB(process.env.MONGO_URL).then(()=>{   

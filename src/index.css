@@ -64,6 +64,62 @@
   }
 }
 
+.slide-container {
+  transition: transform 0.5s ease-out;
+}
+
+.slide-next {
+  animation: slideNext 0.5s ease-out forwards;
+}
+
+.slide-prev {
+  animation: slidePrev 0.5s ease-out forwards;
+}
+
+@keyframes slideNext {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slidePrev {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.slide-in-next {
+  animation: slideInNext 0.5s ease-out forwards;
+}
+
+.slide-in-prev {
+  animation: slideInPrev 0.5s ease-out forwards;
+}
+
+@keyframes slideInNext {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInPrev {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

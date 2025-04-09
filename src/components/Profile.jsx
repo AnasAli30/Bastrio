@@ -115,6 +115,12 @@ export default function Profile() {
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [tabKey, setTabKey] = useState(0);
+  
+  // New state variables for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [collectionsContainerRef, setCollectionsContainerRef] = useState(null);
 
   // Simulated user data - in a real app, this would come from a backend
   const user = {
@@ -127,41 +133,103 @@ export default function Profile() {
 
   useEffect(() => {
     if (isConnected && address) {
-      fetchUserCollections();
+      fetchUserCollections(1, true);
       fetchUserActivity();
       fetchUserStat();
     }
   }, [address, isConnected]);
 
-  const fetchUserCollections = async () => {
+  // Set up intersection observer for infinite scrolling
+  useEffect(() => {
+    if (!collectionsContainerRef) return;
+    
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver(handleObserver, options);
+    
+    // Create a sentinel element at the bottom of the list
+    const sentinel = document.createElement('div');
+    sentinel.id = 'sentinel';
+    sentinel.style.height = '20px';
+    collectionsContainerRef.appendChild(sentinel);
+    
+    observer.observe(sentinel);
+    
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+        sentinel.remove();
+      }
+    };
+  }, [collectionsContainerRef, hasMore, isLoadingMore, currentPage]);
+
+  const handleObserver = (entries) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasMore && !isLoadingMore && activeTab === 'collections') {
+      loadMoreCollections();
+    }
+  };
+
+  const loadMoreCollections = () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    const nextPage = currentPage + 1;
+    fetchUserCollections(nextPage, false);
+  };
+
+  const fetchUserCollections = async (page, reset = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setCollections([]);
+        setCurrentPage(1);
+        setHasMore(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+      
       setError(null);
       const { data } = await axios.get("http://localhost:3000/api/getOwnerWallet", {
         params: {
           owner: address,
-          limit: 200,
-          page: 2,
+          limit: 50, // Reduced batch size for smoother loading
+          page: page,
           sort: "time-desc",
         },
       });
+      
+      if (data.length === 0) {
+        setHasMore(false);
+        return;
+      }
       
       const formattedCollections = await Promise.all(data.map(async (collection) => {
         return {
           address: collection.contract_address,
           name: collection.name,
-          image: collection?.image || collection?.raw_image || "https://via.placeholder.com/400x200?text=Collection",
+          image: collection?.image || collection?.raw_image || "https://demofree.sirv.com/nope-not-here.jpg",
           token_id: collection.token_id,
           time: collection.time
         };
       }));
 
-      setCollections(formattedCollections);
+      if (reset) {
+        setCollections(formattedCollections);
+      } else {
+        setCollections(prev => [...prev, ...formattedCollections]);
+      }
+      
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching collections:", error);
       setError("Failed to load collections. Please try again later.");
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -261,7 +329,7 @@ export default function Profile() {
   };
 
   const filteredCollections = collections.filter(collection =>
-    collection.name.toLowerCase().includes(searchTerm.toLowerCase())
+    collection?.name?.toLowerCase().includes(searchTerm?.toLowerCase())
   );
 
   const handleCollectionSelect = (collection) => {
@@ -673,36 +741,64 @@ export default function Profile() {
                   ) : (
                     <div key={tabKey}>
                       {activeTab === 'collections' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {(selectedCollection ? [selectedCollection] : collections).map((collection) => (
+                        <div 
+                          ref={setCollectionsContainerRef}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                        >
+                          {(selectedCollection ? [selectedCollection] : collections).map((collection, index) => (
                             <Link
-                              key={collection.address}
+                              key={`${collection.address}-${index}`}
                               to={`/collection/${collection.address}`}
-                              className="group"
+                              className="group transform transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
+                              style={{ 
+                                animationDelay: `${index * 100}ms`,
+                                animation: 'fadeIn 0.5s ease-out forwards'
+                              }}
                             >
-                              <div className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
-                                <div className="aspect-video relative">
+                              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
+                                <div className="aspect-video relative overflow-hidden">
                                   <img
                                     src={collection.image}
                                     alt={collection.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
                                     onError={(e) => {
                                       e.target.src = "https://via.placeholder.com/400x200?text=Collection";
                                     }}
                                   />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 </div>
                                 <div className="p-4">
-                                  <h3 className="text-lg font-semibold text-text-light dark:text-text-dark mb-2">
+                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                     {collection.name}
                                   </h3>
-                                  <div className="flex items-center justify-between text-sm text-text-light dark:text-text-dark opacity-75">
-                                    <span>#{collection.token_id}</span>
-                                    <span className="font-mono">{formatAddress(collection.address)}</span>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500 dark:text-gray-400">
+                                      #{collection.token_id}
+                                    </span>
+                                    <span className="text-purple-600 dark:text-purple-400 font-medium">
+                                      {formatAddress(collection.address)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             </Link>
                           ))}
+                          
+                          {isLoadingMore && (
+                            <div className="col-span-full flex justify-center py-8">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-3 h-3 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {!hasMore && collections.length > 0 && (
+                            <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                              <p>No more collections to load</p>
+                            </div>
+                          )}
                         </div>
                       )}
                       
@@ -748,6 +844,13 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

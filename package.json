@@ -20,6 +20,7 @@
     "nft.storage": "^7.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.11.2",
     "react-toastify": "^11.0.5",
     "tailwindcss-animate": "^1.0.7"
