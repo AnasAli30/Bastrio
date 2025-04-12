@@ -26,14 +26,14 @@ import { useUserContext } from "../context/UserContext";
 const TabContent = ({ activeTab, collections, selectedCollection, userActivity, formatAddress, formatTimeAgo }) => {
   if (activeTab === 'collections') {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {(selectedCollection ? [selectedCollection] : collections).map((collection) => (
           <Link
             key={collection.address}
             to={`/collection/${collection.address}`}
-            className="group"
+            className="group focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark focus:ring-offset-2 rounded-xl"
           >
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
               <div className="aspect-video relative">
                 <img
                   src={collection.image}
@@ -359,34 +359,34 @@ export default function Profile() {
   }
 
   // Skeleton loading components
+  // Skeleton loading components
   const ProfileSkeleton = () => (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl p-8 mb-8 backdrop-blur-lg bg-opacity-90 animate-pulse">
-      <div className="flex flex-col md:flex-row items-center gap-8">
+    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 backdrop-blur-lg bg-opacity-90 animate-pulse">
+      <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
         <div className="relative">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
+          <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
         </div>
-        <div className="flex-1 text-center md:text-left">
-          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-          <div className="space-y-2">
-            <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-4 w-72 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="flex-1 text-center md:text-left mt-4 md:mt-0">
+          <div className="h-6 sm:h-7 md:h-8 w-36 sm:w-40 md:w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2 mx-auto md:mx-0"></div>
+          <div className="space-y-2 max-w-md mx-auto md:mx-0">
+            <div className="h-4 w-full sm:w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-4 w-3/4 sm:w-56 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-4 w-5/6 sm:w-72 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       </div>
     </div>
   );
-
   const CollectionsSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
+    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
         <div key={item} className="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-md animate-pulse">
           <div className="aspect-video bg-gray-200 dark:bg-gray-700"></div>
-          <div className="p-4">
-            <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+          <div className="p-3 sm:p-4">
+            <div className="h-4 sm:h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
             <div className="flex items-center justify-between">
-              <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-3 sm:h-4 w-12 sm:w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-3 sm:h-4 w-20 sm:w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
           </div>
         </div>
@@ -457,10 +457,14 @@ export default function Profile() {
     <div className="min-h-screen bg-background-light dark:bg-background-dark">
       <div className="flex">
        {/* Sidebar */}
-       <div className={`fixed h-screen bg-surface-light dark:bg-surface-dark shadow-xl transition-all duration-300 z-10 ${sidebarOpen ? 'w-[28rem]' : 'w-0'}`}>
+       <div className={`fixed h-screen bg-surface-light dark:bg-surface-dark shadow-xl transition-all duration-300 z-20 ${
+         sidebarOpen 
+           ? 'w-full sm:w-[22rem] md:w-[26rem] lg:w-[28rem]' 
+           : 'w-0'
+       }`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="absolute -right-10 top-1/2 transform -translate-y-1/2 bg-surface-light dark:bg-surface-dark p-2 rounded-r-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="absolute -right-10 top-1/2 transform -translate-y-1/2 bg-surface-light dark:bg-surface-dark p-2 rounded-r-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark"
             aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
            {sidebarOpen ? (
@@ -601,8 +605,12 @@ export default function Profile() {
         </div>
 
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-96 pl-9' : 'ml-0'}`}>
-          <div className="py-12 px-8 custom-scrollbar">
+        <div className={`flex-1 transition-all duration-300 ${
+          sidebarOpen 
+            ? 'ml-0 sm:ml-[22rem] md:ml-[26rem] lg:ml-96 pl-0 sm:pl-4 md:pl-6 lg:pl-9' 
+            : 'ml-0'
+        }`}>
+          <div className="py-4 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 custom-scrollbar">
             <style jsx>{`
               .custom-scrollbar::-webkit-scrollbar {
                 width: 8px;
@@ -632,14 +640,15 @@ export default function Profile() {
             <div className="max-w-7xl mx-auto">
               {/* Profile Header */}
               {loading ? <ProfileSkeleton /> : (
-                <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl p-8 mb-8 backdrop-blur-lg bg-opacity-90">
-                  <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 backdrop-blur-lg bg-opacity-90">
+                  <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
                     <div className="relative">
-                      <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-primary-light dark:from-primary-dark to-purple-400 dark:to-purple-600">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gradient-to-br from-primary-light dark:from-primary-dark to-purple-400 dark:to-purple-600">
                         <img
                           src={user.profileImage}
                           alt="Profile"
                           className="w-full h-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             e.target.src = "https://via.placeholder.com/150?text=Profile";
                           }}
@@ -647,9 +656,9 @@ export default function Profile() {
                       </div>
                     </div>
 
-                    <div className="flex-1 text-center md:text-left">
-                      <h1 className="text-3xl font-bold text-text-light dark:text-text-dark mb-2">{user.name}</h1>
-                      <div className="flex flex-col md:flex-row items-center gap-4 text-text-light dark:text-text-dark opacity-75">
+                    <div className="flex-1 text-center md:text-left mt-4 md:mt-0">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-light dark:text-text-dark mb-2">{user.name}</h1>
+                      <div className="flex flex-col md:flex-row flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-text-light dark:text-text-dark opacity-75 text-sm sm:text-base">
                         <div className="flex items-center gap-2">
                           <Wallet className="w-4 h-4 text-primary-light dark:text-primary-dark" />
                           <a
@@ -705,57 +714,67 @@ export default function Profile() {
               {/* Tabs */}
               <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl overflow-hidden backdrop-blur-lg bg-opacity-90">
                 <div className="border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex">
+                  <div className="flex overflow-x-auto no-scrollbar" role="tablist" aria-label="Profile tabs">
                     <button
                       onClick={() => handleTabChange('collections')}
-                      className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium transition-all duration-200 ${
                         activeTab === 'collections'
                           ? 'border-b-2 border-primary-light dark:border-primary-dark text-primary-light dark:text-primary-dark'
                           : 'text-text-light dark:text-text-dark opacity-75 hover:opacity-100'
                       }`}
                       aria-selected={activeTab === 'collections'}
                       role="tab"
+                      aria-controls="collections-tab"
+                      id="collections-tab-button"
+                      tabIndex={activeTab === 'collections' ? 0 : -1}
                     >
                       <FolderOpen className="w-4 h-4" />
-                      My Collections
+                      <span className="whitespace-nowrap">My Collections</span>
                     </button>
                     <button
                       onClick={() => handleTabChange('activity')}
-                      className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium transition-all duration-200 ${
                         activeTab === 'activity'
                           ? 'border-b-2 border-primary-light dark:border-primary-dark text-primary-light dark:text-primary-dark'
                           : 'text-text-light dark:text-text-dark opacity-75 hover:opacity-100'
                       }`}
                       aria-selected={activeTab === 'activity'}
                       role="tab"
+                      aria-controls="activity-tab"
+                      id="activity-tab-button"
+                      tabIndex={activeTab === 'activity' ? 0 : -1}
                     >
                       <Activity className="w-4 h-4" />
-                      Activity
+                      <span className="whitespace-nowrap">Activity</span>
                     </button>
                   </div>
                 </div>
-
-                <div className="p-8">
+                <div className="p-4 sm:p-6 md:p-8">
                   {loading ? (
                     activeTab === 'collections' ? <CollectionsSkeleton /> : <ActivitySkeleton />
                   ) : (
-                    <div key={tabKey}>
-                      {activeTab === 'collections' && (
+                    <div key={tabKey} className="animate-fadeIn transition-all duration-300">
+                      {activeTab === 'collections' ? (
                         <div 
-                          ref={setCollectionsContainerRef}
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                          id="collections-tab"
+                          role="tabpanel"
+                          aria-labelledby="collections-tab-button"
                         >
-                          {(selectedCollection ? [selectedCollection] : collections).map((collection, index) => (
-                            <Link
-                              key={`${collection.address}-${index}`}
-                              to={`/collection/${collection.address}`}
-                              className="group transform transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
-                              style={{ 
-                                animationDelay: `${index * 100}ms`,
-                                animation: 'fadeIn 0.5s ease-out forwards'
-                              }}
-                            >
-                              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
+                          <div 
+                            ref={setCollectionsContainerRef}
+                            className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+                          >
+                            {(selectedCollection ? [selectedCollection] : collections).map((collection, index) => (
+                              <Link
+                                key={`${collection.address}-${index}`}
+                                to={`/collection/${collection.address}`}
+                                className="group transform transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
+                                style={{ 
+                                  animationDelay: `${index * 100}ms`,
+                                  animation: 'fadeIn 0.5s ease-out forwards'
+                                }}
+                              >
+                                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl overflow-hidden shadow-md transition-all duration-300 transform group-hover:scale-[1.02] group-hover:shadow-xl">
                                 <div className="aspect-video relative overflow-hidden">
                                   <img
                                     src={collection.image}
@@ -799,11 +818,15 @@ export default function Profile() {
                               <p>No more collections to load</p>
                             </div>
                           )}
+                          </div>
                         </div>
-                      )}
-                      
-                      {activeTab === 'activity' && (
-                        <div className="space-y-4">
+                      ) : (
+                        <div
+                          id="activity-tab"
+                          role="tabpanel"
+                          aria-labelledby="activity-tab-button"
+                          className="space-y-4"
+                        >
                           {userActivity.length === 0 ? (
                             <div className="text-center py-8 text-text-light dark:text-text-dark opacity-75">
                               <p>No activity found</p>
@@ -849,6 +872,15 @@ export default function Profile() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Hide scrollbar for tab navigation */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
