@@ -3,7 +3,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const NFTCard = ({ item }) => {
   return (
-    <div className="w-full sm:w-[300px] md:w-[320px] lg:w-[350px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="w-full rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
       <div className="aspect-[3/4] relative">
         <img
           src={item.background_image_url || item.image_url}
@@ -34,7 +34,7 @@ const NFTCard = ({ item }) => {
 
 const SkeletonCard = () => {
   return (
-    <div className="w-full sm:w-[300px] md:w-[320px] lg:w-[350px] rounded-xl overflow-hidden shadow-md">
+    <div className="w-full rounded-xl overflow-hidden shadow-md">
       <div className="aspect-[3/4] relative animate-pulse bg-gray-700/30 rounded-xl">
         <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
           <div className="flex items-center">
@@ -54,29 +54,8 @@ const FavoriteSlider = ({ address }) => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const sliderRef = useRef(null);
-  const nextItemsRef = useRef([]);
-  const [validImages, setValidImages] = useState([]);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
-
-  // Calculate number of visible items based on screen width
-  const getVisibleItemCount = () => {
-    if (windowWidth < 640) return 1; // Mobile
-    if (windowWidth < 1024) return 2; // Tablet
-    return 4; // Desktop
-  };
-
-  // Update window width on resize
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     fetchFavorites();
@@ -118,75 +97,38 @@ const FavoriteSlider = ({ address }) => {
     return validNFTs;
   };
 
-  const getNextItems = () => {
-    if (!favorites.length) return [];
-    
-    const visibleCount = getVisibleItemCount();
-    const items = [];
-    const nextIndex = (currentIndex + visibleCount) % favorites.length;
-    
-    for (let i = 0; i < visibleCount; i++) {
-      const index = (nextIndex + i) % favorites.length;
-      items.push(favorites[index]);
-    }
-    return items;
-  };
-
   const handleSlide = (direction) => {
     if (isAnimating) return;
     
     setIsAnimating(true);
-    setSlideDirection(direction);
+    const itemsPerSlide = 4;
+    const totalSlides = Math.ceil(favorites.length / itemsPerSlide);
     
-    // Store next items for animation
-    nextItemsRef.current = getNextItems();
-    
-    if (sliderRef.current) {
-      sliderRef.current.classList.add(`slide-${direction}`);
-    }
+    setCurrentIndex(prev => {
+      if (direction === 'next') {
+        return (prev + 1) % totalSlides;
+      } else {
+        return (prev - 1 + totalSlides) % totalSlides;
+      }
+    });
     
     setTimeout(() => {
-      if (sliderRef.current) {
-        sliderRef.current.classList.remove(`slide-${direction}`);
-      }
-      
-      setCurrentIndex(prev => {
-        const visibleCount = getVisibleItemCount();
-        if (direction === 'next') {
-          const newIndex = prev + visibleCount;
-          return newIndex >= favorites.length ? 0 : newIndex;
-        } else {
-          const newIndex = prev - visibleCount;
-          return newIndex < 0 ? Math.floor((favorites.length - 1) / visibleCount) * visibleCount : newIndex;
-        }
-      });
-      
-      setSlideDirection(null);
       setIsAnimating(false);
     }, 500);
   };
 
-  const handlePrev = () => handleSlide('prev');
-  const handleNext = () => handleSlide('next');
-
-  const getVisibleItems = () => {
-    if (!favorites.length) return [];
-    
-    const visibleCount = getVisibleItemCount();
-    const items = [];
-    for (let i = 0; i < visibleCount; i++) {
-      const index = (currentIndex + i) % favorites.length;
-      items.push(favorites[index]);
-    }
-    return items;
+  const getCurrentSlideItems = () => {
+    const itemsPerSlide = 4;
+    const startIndex = currentIndex * itemsPerSlide;
+    return favorites.slice(startIndex, startIndex + itemsPerSlide);
   };
 
   if (loading) {
     return (
       <div className="py-4 sm:py-6 lg:py-8">
-        <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 px-2 sm:px-4 md:px-6 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[550px]">
-          {Array.from({ length: getVisibleItemCount() }).map((_, index) => (
-            <div key={index} className="w-full sm:w-1/2 lg:w-1/4 flex justify-center px-2 sm:px-3">
+        <div className="grid grid-cols-4 gap-4 sm:gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="w-full">
               <SkeletonCard />
             </div>
           ))}
@@ -197,69 +139,47 @@ const FavoriteSlider = ({ address }) => {
 
   if (!favorites.length) return null;
 
+  const currentItems = getCurrentSlideItems();
+  const totalSlides = Math.ceil(favorites.length / 4);
+
   return (
-    <div className="py-4 sm:py-6 lg:py-8">
-      <div className="relative">
-        <div className="overflow-hidden">
-          <div 
-            ref={sliderRef}
-            className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 px-2 sm:px-4 md:px-6 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[550px]"
-            style={{ overflowX: 'hidden' }}
-          >
-            {getVisibleItems().map((item, index) => (
-              <div
-                key={index}
-                className="relative group cursor-pointer w-full sm:w-1/2 lg:w-1/4 px-2 sm:px-3"
-              >
-                <NFTCard item={item} />
-              </div>
-            ))}
-          </div>
+    <div className="py-4 sm:py-6 lg:py-8 relative">
+      <div className="overflow-hidden">
+        <div 
+          ref={sliderRef}
+          className="grid grid-cols-4 gap-4 sm:gap-6 transition-transform duration-500 ease-in-out"
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`
+          }}
+        >
+          {currentItems.map((item, index) => (
+            <div key={index} className="w-full">
+              <NFTCard item={item} />
+            </div>
+          ))}
         </div>
-
-        {slideDirection === 'next' && (
-          <div className="absolute top-0 left-0 right-0 flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 px-2 sm:px-4 md:px-6 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[550px] slide-in-next" style={{ overflowX: 'hidden' }}>
-            {nextItemsRef.current.map((item, index) => (
-              <div
-                key={`next-${index}`}
-                className="relative group cursor-pointer w-full sm:w-1/2 lg:w-1/4 px-2 sm:px-3"
-              >
-                <NFTCard item={item} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {slideDirection === 'prev' && (
-          <div className="absolute top-0 left-0 right-0 flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 px-2 sm:px-4 md:px-6 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[550px] slide-in-prev" style={{ overflowX: 'hidden' }}>
-            {nextItemsRef.current.map((item, index) => (
-              <div
-                key={`prev-${index}`}
-                className="relative group cursor-pointer w-full sm:w-1/2 lg:w-1/4 px-2 sm:px-3"
-              >
-                <NFTCard item={item} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <button
-          onClick={handlePrev}
-          disabled={isAnimating || favorites.length <= getVisibleItemCount()}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black p-2 sm:p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 disabled:opacity-50"
-          aria-label="Previous items"
-        >
-          <FaChevronLeft className="text-base sm:text-lg md:text-xl text-white" />
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={isAnimating || favorites.length <= getVisibleItemCount()}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black p-2 sm:p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 disabled:opacity-50"
-          aria-label="Next items"
-        >
-          <FaChevronRight className="text-base sm:text-lg md:text-xl text-white" />
-        </button>
       </div>
+
+      {totalSlides > 1 && (
+        <>
+          <button
+            onClick={() => handleSlide('prev')}
+            disabled={isAnimating}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black p-2 sm:p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 disabled:opacity-50"
+            aria-label="Previous slide"
+          >
+            <FaChevronLeft className="text-base sm:text-lg md:text-xl text-white" />
+          </button>
+          <button
+            onClick={() => handleSlide('next')}
+            disabled={isAnimating}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-black/70 hover:bg-black p-2 sm:p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 disabled:opacity-50"
+            aria-label="Next slide"
+          >
+            <FaChevronRight className="text-base sm:text-lg md:text-xl text-white" />
+          </button>
+        </>
+      )}
     </div>
   );
 };
